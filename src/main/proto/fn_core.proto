@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option java_package = "me.twodee.friendlyneighbor";
+option java_outer_classname = "FnCoreGenerated";
+option java_generic_services = true;
+
+/* FNCore provides the core functionalities of FriendlyNeighbor */
+service FnCore {
+    rpc RegisterUser (RegistrationRequest) returns (RequestResult) {}
+    rpc DeleteUser (UserIdentifier) returns (RequestResult) {}
+    // Given a search request, findUsersInCircle returns users in the vicinity with their distance
+    rpc findUsersInCircle (SearchAreaRequest) returns (stream UserInVicinity) {}
+}
+
+// The request message containing the user's name.
+message RegistrationRequest {
+    string userId = 1;
+    Location location = 2;
+    double radius = 3;
+}
+
+message UserIdentifier {
+    string userId = 1;
+}
+
+message RequestResult {
+    bool success = 1;
+    map<string, string> errors = 2;
+}
+
+message UserInVicinity {
+    string userId = 1;
+    double distance = 2;
+}
+
+message Location {
+    double latitude = 1;
+    double longitude = 2;
+}
+
+message SearchAreaRequest {
+    Location location = 1;
+    double radius = 2;
+}
