@@ -1,6 +1,5 @@
 package me.twodee.friendlyneighbor;
 
-import com.mongodb.DBObject;
 import com.mongodb.client.MongoClients;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -9,8 +8,7 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
-import me.twodee.friendlyneighbor.Entity.Location;
-import org.hamcrest.CoreMatchers;
+import me.twodee.friendlyneighbor.entity.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
