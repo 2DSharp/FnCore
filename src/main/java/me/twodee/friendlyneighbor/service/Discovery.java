@@ -1,6 +1,6 @@
 package me.twodee.friendlyneighbor.service;
 
-import me.twodee.friendlyneighbor.entity.Location;
+import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.FnCoreGenerated;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 
@@ -18,10 +18,10 @@ public class Discovery
 
     public void registerUser(FnCoreGenerated.RegistrationRequest request)
     {
-        Location location = new Location(request.getUserId(),
-                                         new double[]{request.getLocation().getLongitude(),
-                                                 request.getLocation().getLatitude()},
-                                         request.getRadius());
-        repository.save(location);
+        UserLocation userLocation = new UserLocation(request.getUserId(),
+                                                     new UserLocation.Position(request.getLocation().getLatitude(),
+                                                                               request.getLocation().getLongitude()),
+                                                     request.getRadius());
+        repository.save(userLocation);
     }
 }

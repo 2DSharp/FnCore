@@ -8,7 +8,7 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
-import me.twodee.friendlyneighbor.entity.Location;
+import me.twodee.friendlyneighbor.entity.UserLocation;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,16 +55,15 @@ class GeoSearchTest
         template = new MongoTemplate(MongoClients.create(), "test");
     }
 
-
     @Test
-    void test() throws Exception {
+    void test()
+    {
+        template.indexOps(UserLocation.class).ensureIndex(new GeospatialIndex("position") );
 
-        template.indexOps(Location.class).ensureIndex(new GeospatialIndex("position") );
-
-        template.save(new Location("International", new double[]{-73.9667, 40.738868}, 2100.0));
-        template.save(new Location("Mumbai", new double[]{ 72.807543, 19.416575 }, 1100));
-        template.save(new Location("Kolkata", new double[]{ 88.329317, 22.507449 }, 2100));
-        template.save(new Location("Delhi", new double[]{77.2258241, 28.5837057}, 2100));
+        System.out.println(template.save(new UserLocation("Outside", new UserLocation.Position(10.5837057, 70.2258241), 100)));
+        template.save( new UserLocation("Mumbai", new UserLocation.Position(19.416575, 72.807543), 1100));
+        template.save(new UserLocation("Kolkata", new UserLocation.Position(22.507449, 88.329317), 2100));
+        template.save(new UserLocation("Delhi", new UserLocation.Position(28.2258241, 77.5837057), 2100));
 
         Point location = new Point(88.414486, 22.623806 );
         Distance distance = new Distance(2100, Metrics.KILOMETERS);
@@ -74,7 +73,7 @@ class GeoSearchTest
                 Criteria.where("radius").gte(2100));
 
         Aggregation aggregation = Aggregation.newAggregation(nearestPoints, withinRadiusOfNearestPoints);
-        AggregationResults<Location> res = template.aggregate(aggregation, "location", Location.class);
+        AggregationResults<UserLocation> res = template.aggregate(aggregation, "location", UserLocation.class);
 
         assertThat(res.getMappedResults().size(), equalTo(2));
          res.getMappedResults().forEach(r -> assertThat(r.getId(), anyOf(equalTo("Kolkata"), equalTo("Delhi"))));
