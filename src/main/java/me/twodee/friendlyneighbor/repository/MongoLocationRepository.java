@@ -49,6 +49,12 @@ public class MongoLocationRepository implements LocationRepository
         return Collections.emptyList();
     }
 
+    @Override
+    public List<UserLocation> getUsersNearBy(UserLocation userLocation)
+    {
+        return getUsersInGivenLocation(userLocation.getPosition(), userLocation.getRadius(), userLocation.getId());
+    }
+
     private List<UserLocation> getUsersInGivenLocation(UserLocation.Position position, double radius, String exclude)
     {
         GeoResults<UserLocation> geoResults = template.query(UserLocation.class)

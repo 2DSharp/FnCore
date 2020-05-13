@@ -121,4 +121,71 @@ class MongoUserLocationRepositoryTest
 
         assertThat(users).extracting("id").containsOnly("Kolkata", "Delhi");
     }
+
+    @Test
+    void testSuccessfulLookupByValues()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
+        template.save(new UserLocation("Kolkata", new UserLocation.Position(22.507449, 88.329317), 2100));
+        template.save(new UserLocation("Delhi", new UserLocation.Position(28.2258241, 77.5837057), 2100));
+        template.save(new UserLocation("Outside", new UserLocation.Position(10.5837057, 70.2258241), 100));
+
+        UserLocation userLocation = new UserLocation("abc123", new UserLocation.Position(22.20, 88.25), 2100);
+        List<UserLocation> users = repository.getUsersNearBy(userLocation);
+
+        assertThat(users).extracting("id").containsOnly("Kolkata", "Delhi");
+    }
+
+    @Test
+    void testLookupByValueDoesntContainSameLocation()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
+        template.save(new UserLocation("Kolkata", new UserLocation.Position(22.507449, 88.329317), 200));
+
+        UserLocation userLocation = new UserLocation("abc123", new UserLocation.Position(22.20, 88.25), 2100);
+        List<UserLocation> users = repository.getUsersNearBy(userLocation);
+
+        assertThat(users).extracting("id").doesNotContain("abc123");
+    }
+
+    @Test
+    void testLookupByValueDoesntContainLocationOutOfRange()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 500));
+        template.save(new UserLocation("Outside", new UserLocation.Position(10.5837057, 70.2258241), 100));
+
+        UserLocation userLocation = new UserLocation("abc123", new UserLocation.Position(22.20, 88.25), 2100);
+        List<UserLocation> users = repository.getUsersNearBy(userLocation);
+
+        assertThat(users).extracting("id").doesNotContain("Outside");
+    }
+
+    @Test
+    void testLookupByValueDoesntContainLocationInRangeWithSmallRadius()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
+        template.save(new UserLocation("Delhi", new UserLocation.Position(28.2258241, 77.5837057), 1200));
+
+        UserLocation userLocation = new UserLocation("abc123", new UserLocation.Position(22.20, 88.25), 2100);
+        List<UserLocation> users = repository.getUsersNearBy(userLocation);
+
+        assertThat(users).extracting("id").doesNotContain("Delhi");
+    }
+
+    @Test
+    void testLookupByValueContainsLocationWithSmallButEnoughRange()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 400));
+        template.save(new UserLocation("Kolkata", new UserLocation.Position(22.507449, 88.329317), 100));
+
+        UserLocation userLocation = new UserLocation("abc123", new UserLocation.Position(22.20, 88.25), 2100);
+        List<UserLocation> users = repository.getUsersNearBy(userLocation);
+
+        assertThat(users).extracting("id").containsExactly("Kolkata");
+    }
 }

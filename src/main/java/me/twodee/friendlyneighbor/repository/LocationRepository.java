@@ -20,4 +20,11 @@ public interface LocationRepository
      */
     List<UserLocation> getUsersNearBy(String userId);
 
+    /**
+     * Look up users who are near a given location
+     * @param userLocation A user location object
+     * @return A list of users with their distance
+     */
+    List<UserLocation> getUsersNearBy(UserLocation userLocation);
+
 }
