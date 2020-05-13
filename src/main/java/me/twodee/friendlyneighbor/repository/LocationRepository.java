@@ -27,4 +27,10 @@ public interface LocationRepository
      */
     List<UserLocation> getUsersNearBy(UserLocation userLocation);
 
+    /**
+     * Get a single user's location details
+     * @param id User ID string
+     * @return Location details of said user
+     */
+    UserLocation findById(String id);
 }

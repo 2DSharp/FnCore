@@ -3,12 +3,7 @@ package me.twodee.friendlyneighbor.repository;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import org.springframework.data.geo.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.GeoNearOperation;
-import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 
 import javax.inject.Inject;
@@ -53,6 +48,12 @@ public class MongoLocationRepository implements LocationRepository
     public List<UserLocation> getUsersNearBy(UserLocation userLocation)
     {
         return getUsersInGivenLocation(userLocation.getPosition(), userLocation.getRadius(), userLocation.getId());
+    }
+
+    @Override
+    public UserLocation findById(String id)
+    {
+        return template.findById(id, UserLocation.class);
     }
 
     private List<UserLocation> getUsersInGivenLocation(UserLocation.Position position, double radius, String exclude)

@@ -19,6 +19,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class MongoUserLocationRepositoryTest
 {
@@ -187,5 +188,20 @@ class MongoUserLocationRepositoryTest
         List<UserLocation> users = repository.getUsersNearBy(userLocation);
 
         assertThat(users).extracting("id").containsExactly("Kolkata");
+    }
+
+    @Test
+    void testUserFetch()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 400));
+
+        UserLocation userLocation = repository.findById("abc123");
+
+        assertThat(userLocation.getId(), equalTo("abc123"));
+        assertThat(userLocation.getRadius(), equalTo(400.0));
+        assertThat(userLocation.getPosition().getLatitude(), equalTo(22.507449));
+        assertThat(userLocation.getPosition().getLongitude(), equalTo(88.34));
+        assertNull(userLocation.getDis());
     }
 }
