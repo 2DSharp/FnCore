@@ -1,6 +1,7 @@
 package me.twodee.friendlyneighbor.repository;
 
 import me.twodee.friendlyneighbor.entity.UserLocation;
+import me.twodee.friendlyneighbor.exception.InvalidUser;
 import org.springframework.data.geo.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
@@ -34,19 +35,21 @@ public class MongoLocationRepository implements LocationRepository
     }
 
     @Override
-    public List<UserLocation> getUsersNearBy(String userId)
+    public List<UserLocation> getUsersNearBy(String userId) throws InvalidUser
     {
         UserLocation userLocation = template.findById(userId, UserLocation.class);
 
         if (userLocation != null) {
             return getUsersInGivenLocation(userLocation.getPosition(), userLocation.getRadius(), userId);
         }
-        return Collections.emptyList();
+        throw new InvalidUser("The user id supplied doesn't exist");
     }
 
     @Override
-    public List<UserLocation> getUsersNearBy(UserLocation userLocation)
+    public List<UserLocation> getUsersNearBy(UserLocation userLocation) throws InvalidUser
     {
+        if (template.findById(userLocation.getId(), UserLocation.class) == null)
+            throw new InvalidUser("The user id supplied doesn't exist");
         return getUsersInGivenLocation(userLocation.getPosition(), userLocation.getRadius(), userLocation.getId());
     }
 

@@ -9,6 +9,7 @@ import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import me.twodee.friendlyneighbor.entity.UserLocation;
+import me.twodee.friendlyneighbor.exception.InvalidUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MongoUserLocationRepositoryTest
 {
@@ -62,7 +64,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testLookupByIdDoesntContainSameLocation()
+    void testLookupByIdDoesntContainSameLocation() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
@@ -74,7 +76,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testLookupByIdDoesntContainLocationOutOfRange()
+    void testLookupByIdDoesntContainLocationOutOfRange() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
@@ -86,7 +88,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testLookupByIdDoesntContainLocationInRangeWithSmallRadius()
+    void testLookupByIdDoesntContainLocationInRangeWithSmallRadius() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
@@ -98,7 +100,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testLookupByIdContainsLocationWithSmallButEnoughRange()
+    void testLookupByIdContainsLocationWithSmallButEnoughRange() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
@@ -110,7 +112,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testSuccessfulLookupById()
+    void testSuccessfulLookupById() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
@@ -124,7 +126,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testSuccessfulLookupByValues()
+    void testSuccessfulLookupByValues() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
@@ -139,7 +141,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testLookupByValueDoesntContainSameLocation()
+    void testLookupByValueDoesntContainSameLocation() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
@@ -152,7 +154,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testLookupByValueDoesntContainLocationOutOfRange()
+    void testLookupByValueDoesntContainLocationOutOfRange() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 500));
@@ -165,7 +167,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testLookupByValueDoesntContainLocationInRangeWithSmallRadius()
+    void testLookupByValueDoesntContainLocationInRangeWithSmallRadius() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
@@ -178,7 +180,7 @@ class MongoUserLocationRepositoryTest
     }
 
     @Test
-    void testLookupByValueContainsLocationWithSmallButEnoughRange()
+    void testLookupByValueContainsLocationWithSmallButEnoughRange() throws InvalidUser
     {
         LocationRepository repository = new MongoLocationRepository(template);
         template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 400));
@@ -203,5 +205,20 @@ class MongoUserLocationRepositoryTest
         assertThat(userLocation.getPosition().getLatitude(), equalTo(22.507449));
         assertThat(userLocation.getPosition().getLongitude(), equalTo(88.34));
         assertNull(userLocation.getDis());
+    }
+
+    @Test
+    void testLookupByIdForInvalidUser()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        assertThrows(InvalidUser.class, () -> repository.getUsersNearBy("invalid"));
+    }
+
+    @Test
+    void testLookupByValueForInvalidUser()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        UserLocation userLocation = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 400);
+        assertThrows(InvalidUser.class, () -> repository.getUsersNearBy(userLocation));
     }
 }
