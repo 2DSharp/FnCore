@@ -30,8 +30,16 @@ public interface LocationRepository
 
     /**
      * Get a single user's location details
+     *
      * @param id User ID string
      * @return Location details of said user
      */
     UserLocation findById(String id);
+
+    /**
+     * Delete a user location based on their id
+     *
+     * @param id user's identifier
+     */
+    void deleteById(String id);
 }

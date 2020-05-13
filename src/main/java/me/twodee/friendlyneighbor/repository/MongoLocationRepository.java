@@ -5,10 +5,11 @@ import me.twodee.friendlyneighbor.exception.InvalidUser;
 import org.springframework.data.geo.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.Query;
 
 import javax.inject.Inject;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,8 +49,9 @@ public class MongoLocationRepository implements LocationRepository
     @Override
     public List<UserLocation> getUsersNearBy(UserLocation userLocation) throws InvalidUser
     {
-        if (template.findById(userLocation.getId(), UserLocation.class) == null)
+        if (template.findById(userLocation.getId(), UserLocation.class) == null) {
             throw new InvalidUser("The user id supplied doesn't exist");
+        }
         return getUsersInGivenLocation(userLocation.getPosition(), userLocation.getRadius(), userLocation.getId());
     }
 
@@ -59,12 +61,18 @@ public class MongoLocationRepository implements LocationRepository
         return template.findById(id, UserLocation.class);
     }
 
+    @Override
+    public void deleteById(String id)
+    {
+        template.remove(Query.query(Criteria.where("id").is(id)), UserLocation.class);
+    }
+
     private List<UserLocation> getUsersInGivenLocation(UserLocation.Position position, double radius, String exclude)
     {
         GeoResults<UserLocation> geoResults = template.query(UserLocation.class)
-            .as(UserLocation.class)
-            .near(createNearQuery(position, radius))
-            .all();
+                .as(UserLocation.class)
+                .near(createNearQuery(position, radius))
+                .all();
 
         return geoResults.getContent().stream()
                 .filter(result -> filterIneligibleResults(result, exclude))

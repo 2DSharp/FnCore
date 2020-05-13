@@ -221,4 +221,21 @@ class MongoUserLocationRepositoryTest
         UserLocation userLocation = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 400);
         assertThrows(InvalidUser.class, () -> repository.getUsersNearBy(userLocation));
     }
+
+    @Test
+    void testDeleteUser()
+    {
+        LocationRepository repository = new MongoLocationRepository(template);
+        template.save(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 400));
+        UserLocation result = template.save(
+                new UserLocation("Mumbai", new UserLocation.Position(22.507449, 88.34), 400));
+
+        assertThat(result.getId(), equalTo("Mumbai"));
+        assertThat(template.findAll(UserLocation.class).size(), equalTo(2));
+
+        repository.deleteById("Mumbai");
+
+        assertThat(template.findAll(UserLocation.class).size(), equalTo(1));
+        assertNull(template.findById("Mumbai", UserLocation.class));
+    }
 }
