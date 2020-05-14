@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class Discovery
 {
-    public final LocationRepository repository;
+    private final LocationRepository repository;
 
     @Inject
     public Discovery(LocationRepository repository)
