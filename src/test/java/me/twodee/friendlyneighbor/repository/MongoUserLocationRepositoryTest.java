@@ -123,6 +123,7 @@ class MongoUserLocationRepositoryTest
         List<UserLocation> users = repository.getUsersNearBy("abc123");
 
         assertThat(users).extracting("id").containsOnly("Kolkata", "Delhi");
+        assertThat(users).extracting("dis").isNotNull();
     }
 
     @Test
@@ -138,6 +139,7 @@ class MongoUserLocationRepositoryTest
         List<UserLocation> users = repository.getUsersNearBy(userLocation);
 
         assertThat(users).extracting("id").containsOnly("Kolkata", "Delhi");
+        assertThat(users).extracting("dis").isNotNull();
     }
 
     @Test
