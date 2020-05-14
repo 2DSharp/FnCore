@@ -21,13 +21,16 @@ public class Discovery
         this.repository = repository;
     }
 
-    public void registerUser(FnCoreGenerated.RegistrationRequest request)
+    public FnCoreGenerated.RequestResult registerUser(FnCoreGenerated.RegistrationRequest request)
     {
         UserLocation userLocation = new UserLocation(request.getUserId(),
                                                      new UserLocation.Position(request.getLocation().getLatitude(),
                                                                                request.getLocation().getLongitude()),
                                                      request.getRadius());
-        repository.save(userLocation);
+        if (repository.save(userLocation).equals(userLocation)) {
+            return FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build();
+        }
+        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(false).build();
     }
 
     public FnCoreGenerated.NearbyUsersResult lookupNearbyUsersByLocation(FnCoreGenerated.SearchAreaRequest request)
@@ -101,5 +104,11 @@ public class Discovery
         return users.stream()
                 .map(this::createDtoUser)
                 .collect(Collectors.toList());
+    }
+
+    public FnCoreGenerated.RequestResult deleteUser(FnCoreGenerated.UserIdentifier request)
+    {
+        repository.deleteById(request.getUserId());
+        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build();
     }
 }

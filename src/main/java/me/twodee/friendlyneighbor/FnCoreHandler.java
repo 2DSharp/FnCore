@@ -18,27 +18,28 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     @Override
     public void registerUser(FnCoreGenerated.RegistrationRequest request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
     {
-        responseObserver.onNext(saveNewUser(request));
+        responseObserver.onNext(discovery.registerUser(request));
         responseObserver.onCompleted();
-    }
-
-    private FnCoreGenerated.RequestResult saveNewUser(FnCoreGenerated.RegistrationRequest request)
-    {
-       discovery.registerUser(request);
-       return FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build();
     }
 
     @Override
     public void deleteUser(FnCoreGenerated.UserIdentifier request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
     {
-
+        responseObserver.onNext(discovery.deleteUser(request));
+        responseObserver.onCompleted();
     }
 
     @Override
-    public void findUsersInCircle(FnCoreGenerated.SearchAreaRequest request, StreamObserver<FnCoreGenerated.UserInVicinity> responseObserver)
+    public void findUsersInCircleByLocation(FnCoreGenerated.SearchAreaRequest request, StreamObserver<FnCoreGenerated.NearbyUsersResult> responseObserver)
     {
-        //TODO: Figure out how to send data in streams
+        responseObserver.onNext(discovery.lookupNearbyUsersByLocation(request));
+        responseObserver.onCompleted();
     }
 
-
+    @Override
+    public void findUsersInCircleById(FnCoreGenerated.UserIdentifier request, StreamObserver<FnCoreGenerated.NearbyUsersResult> responseObserver)
+    {
+        responseObserver.onNext(discovery.lookupNearbyUsersByUserId(request));
+        responseObserver.onCompleted();
+    }
 }
