@@ -12,7 +12,7 @@ For building the project do the following:
 Clone the project
 ```
 git clone https://github.com/2dsharp/FriendlyNeighborCore.git
-cd FriendlyNeighborCore.git
+cd FriendlyNeighborCore/
 ```
 Once you are done cloning, do either of the following methods.
 
