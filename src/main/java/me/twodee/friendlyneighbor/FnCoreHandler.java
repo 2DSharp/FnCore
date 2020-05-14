@@ -37,7 +37,7 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     @Override
     public void findUsersInCircle(FnCoreGenerated.SearchAreaRequest request, StreamObserver<FnCoreGenerated.UserInVicinity> responseObserver)
     {
-        super.findUsersInCircle(request, responseObserver);
+        //TODO: Figure out how to send data in streams
     }
 
 

@@ -1,7 +1,7 @@
 package me.twodee.friendlyneighbor.service;
 
-import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.FnCoreGenerated;
+import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 
 import javax.inject.Inject;
@@ -24,4 +24,5 @@ public class Discovery
                                                      request.getRadius());
         repository.save(userLocation);
     }
+    // TODO: Create lookup methods, handle exceptions
 }
