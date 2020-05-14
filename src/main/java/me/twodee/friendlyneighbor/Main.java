@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import me.twodee.friendlyneighbor.configuration.LocationModule;
 
 import java.io.IOException;
+import java.util.Properties;
 
 
 public class Main
@@ -13,7 +14,10 @@ public class Main
     {
         Injector injector = Guice.createInjector(new LocationModule());
         FnCoreHandler service = injector.getInstance(FnCoreHandler.class);
-        Server server = new Server(9120, service);
+        Properties properties = new Properties();
+        properties.load(Main.class.getClassLoader().getResourceAsStream("config.properties"));
+
+        Server server = new Server(Integer.parseInt(properties.getProperty("server.port")), service);
         server.start();
     }
 }
