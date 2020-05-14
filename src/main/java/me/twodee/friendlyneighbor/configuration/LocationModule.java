@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClients;
-import me.twodee.friendlyneighbor.Main;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 import me.twodee.friendlyneighbor.repository.MongoLocationRepository;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -23,11 +22,11 @@ public class LocationModule extends AbstractModule
     @Provides
     MongoTemplate provideMongoTemplate() throws IOException
     {
-        Properties properties = new Properties();
-        properties.load(Main.class.getClassLoader().getResourceAsStream("config.properties"));
+        Properties prop = new Properties();
+        prop.load(getClass().getClassLoader().getResourceAsStream("config.properties"));
 
         return new MongoTemplate(MongoClients.create(new ConnectionString(
-                "mongodb://" + properties.getProperty("mongo.hostname") + ":" + properties.getProperty("mongo.port"))),
-                                 properties.getProperty("mongo.database"));
+                "mongodb://" + prop.getProperty("mongo.hostname") + ":" + prop.getProperty("mongo.port"))),
+                                 prop.getProperty("mongo.database"));
     }
 }
