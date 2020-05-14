@@ -1,4 +1,4 @@
-package me.twodee.friendlyneighbor.guice.module;
+package me.twodee.friendlyneighbor.configuration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -18,6 +18,6 @@ public class LocationModule extends AbstractModule
     @Provides
     MongoTemplate provideMongoTemplate()
     {
-       return new MongoTemplate(MongoClients.create(), "test_friendly_neighbor");
+        return new MongoTemplate(MongoClients.create(), "test_friendly_neighbor");
     }
 }

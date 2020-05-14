@@ -2,7 +2,7 @@ package me.twodee.friendlyneighbor;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import me.twodee.friendlyneighbor.guice.module.LocationModule;
+import me.twodee.friendlyneighbor.configuration.LocationModule;
 
 import java.io.IOException;
 
