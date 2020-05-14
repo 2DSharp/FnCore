@@ -7,13 +7,16 @@ It does the heavy lifting for other services with data transfer based on gRPC/Pr
 
 If you don't have a copy of the pre-compiled binary, ask me at 2d@twodee.me.
 
-* Clone the project
+For building the project do the following:
+
+Clone the project
 ```
 git clone https://github.com/2dsharp/FriendlyNeighborCore.git
 cd FriendlyNeighborCore.git
 ```
+Once you are done cloning, do either of the following methods.
 
-### Building with Maven (Prefered for developers)
+### Building with Maven (For developers)
 
 If you'd like to change something on the service itself and test it on your local machine, 
 I'd personally prefer this method since it can use your local `.m2` repository.
@@ -34,7 +37,7 @@ Run again and the issue should be gone. If it persists, create an issue.
 * Run the generated binary with:
 ```java -jar target/friendlyneighbor-core-jar-with-dependencies.jar```
 
-### Building with Docker (Prefered for users)
+### Building with Docker (For consumers)
 
 If you'd like to **use the FnCore API**, run it in a container with **Docker**.
 
