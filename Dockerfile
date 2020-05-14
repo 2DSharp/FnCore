@@ -1,0 +1,20 @@
+#
+# Build stage
+#
+FROM maven:3.6.0-jdk-8-slim AS build
+RUN echo 'Copying files...'
+COPY src /home/app/src
+COPY pom.xml /home/app
+RUN echo 'Downloading dependencies...'
+COPY pom.xml /tmp/pom.xml
+RUN mvn -B -f /tmp/pom.xml -s /usr/share/maven/ref/settings-docker.xml dependency:go-offline
+RUN echo 'Building...'
+RUN mvn -f /home/app/pom.xml package
+
+#
+# Package stage
+#
+FROM openjdk:8-jre-slim
+COPY --from=build /home/app/target/friendlyneighbor-core-jar-with-dependencies.jar /usr/local/lib/fncore.jar
+EXPOSE 9120
+ENTRYPOINT ["java","-jar","/usr/local/lib/fncore.jar"]
