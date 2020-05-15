@@ -1,18 +1,22 @@
 package me.twodee.friendlyneighbor.service;
 
+import lombok.extern.java.Log;
 import me.twodee.friendlyneighbor.FnCoreGenerated;
 import me.twodee.friendlyneighbor.dto.Notification;
-import me.twodee.friendlyneighbor.dto.UserLocationsDTO;
+import me.twodee.friendlyneighbor.dto.ResultObject;
+import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 
 import javax.inject.Inject;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Log
 public class Discovery
 {
     private final LocationRepository repository;
@@ -23,6 +27,65 @@ public class Discovery
         this.repository = repository;
     }
 
+    public ResultObject saveUserLocation(UserLocation location)
+    {
+        try {
+            repository.save(location);
+            return new ResultObject();
+        } catch (Throwable e) {
+            return somethingWentWrong(e);
+        }
+    }
+
+    public ResultObject deleteUserLocation(String id)
+    {
+        try {
+            repository.deleteById(id);
+            return new ResultObject();
+        } catch (Throwable e) {
+            return somethingWentWrong(e);
+        }
+
+    }
+
+    public UserLocationsResult lookupNearbyUsersByUserId(String requestingUid)
+    {
+        try {
+            return new UserLocationsResult(repository.getUsersNearBy(requestingUid));
+        } catch (InvalidUser e) {
+            return buildErrorDTO(e);
+        }
+    }
+
+    public UserLocationsResult lookupNearbyUsersByLocation(UserLocation location)
+    {
+        try {
+            return new UserLocationsResult(repository.getUsersNearBy(location));
+        } catch (InvalidUser e) {
+            return buildErrorDTO(e);
+        }
+    }
+
+    private ResultObject somethingWentWrong(Throwable e)
+    {
+        log.severe(Arrays.toString(e.getStackTrace()));
+        return new ResultObject("internal", ResultObject.SOMETHING_WENT_WRONG);
+    }
+
+    private UserLocationsResult buildErrorDTO(Throwable e)
+    {
+        Notification note = new Notification();
+        if (e instanceof InvalidUser) {
+            note.addError("userId", "The supplied User ID doesn't exist");
+        }
+        return new UserLocationsResult(note);
+    }
+
+    /**
+     * @param request
+     * @return
+     * @deprecated
+     */
     public FnCoreGenerated.RequestResult saveUserLocation(FnCoreGenerated.RegistrationRequest request)
     {
         UserLocation userLocation = new UserLocation(request.getUserId(),
@@ -35,22 +98,15 @@ public class Discovery
         return FnCoreGenerated.RequestResult.newBuilder().setSuccess(false).build();
     }
 
-    public UserLocationsDTO lookupNearbyUsersByLocation(UserLocation location)
+    /**
+     * @param request
+     * @return
+     * @deprecated
+     */
+    public FnCoreGenerated.RequestResult deleteUser(FnCoreGenerated.UserIdentifier request)
     {
-        try {
-            return new UserLocationsDTO(repository.getUsersNearBy(location));
-        } catch (InvalidUser e) {
-            return buildErrorDTO(e);
-        }
-    }
-
-    private UserLocationsDTO buildErrorDTO(Throwable e)
-    {
-        Notification note = new Notification();
-        if (e instanceof InvalidUser) {
-            note.addError("userId", "The supplied User ID doesn't exist");
-        }
-        return new UserLocationsDTO(note);
+        repository.deleteById(request.getUserId());
+        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build();
     }
 
     /**
@@ -70,15 +126,6 @@ public class Discovery
 
         } catch (InvalidUser e) {
             return buildFailedResult(e);
-        }
-    }
-
-    public UserLocationsDTO lookupNearbyUsersByUserId(String requestingUid)
-    {
-        try {
-            return new UserLocationsDTO(repository.getUsersNearBy(requestingUid));
-        } catch (InvalidUser e) {
-            return buildErrorDTO(e);
         }
     }
 
@@ -143,11 +190,5 @@ public class Discovery
         return users.stream()
                 .map(this::createDtoUser)
                 .collect(Collectors.toList());
-    }
-
-    public FnCoreGenerated.RequestResult deleteUser(FnCoreGenerated.UserIdentifier request)
-    {
-        repository.deleteById(request.getUserId());
-        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build();
     }
 }

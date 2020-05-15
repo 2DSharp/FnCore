@@ -8,11 +8,11 @@ import java.util.List;
 
 @AllArgsConstructor
 @Getter
-public class UserLocationsDTO extends DataTransferObject
+public class UserLocationsResult extends ResultObject
 {
     private List<UserLocation> userLocations;
 
-    public UserLocationsDTO(Notification notification)
+    public UserLocationsResult(Notification notification)
     {
         setNotification(notification);
     }
