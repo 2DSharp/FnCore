@@ -6,9 +6,9 @@ option java_generic_services = true;
 
 /* FNCore provides the core functionalities of FriendlyNeighbor */
 service FnCore {
-    rpc RegisterUser (RegistrationRequest) returns (RequestResult) {
+    rpc SaveUserLocation (RegistrationRequest) returns (RequestResult) {
     }
-    rpc DeleteUser (UserIdentifier) returns (RequestResult) {
+    rpc DeleteUserLocation (UserIdentifier) returns (RequestResult) {
     }
     // Given a search request, findUsersInCircle returns users in the vicinity with their distance
     rpc findUsersInCircleByLocation (SearchAreaRequest) returns (NearbyUsersResult) {

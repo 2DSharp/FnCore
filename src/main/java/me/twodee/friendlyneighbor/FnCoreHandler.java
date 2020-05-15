@@ -16,14 +16,14 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     }
 
     @Override
-    public void registerUser(FnCoreGenerated.RegistrationRequest request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
+    public void saveUserLocation(FnCoreGenerated.RegistrationRequest request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
     {
         responseObserver.onNext(discovery.registerUser(request));
         responseObserver.onCompleted();
     }
 
     @Override
-    public void deleteUser(FnCoreGenerated.UserIdentifier request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
+    public void deleteUserLocation(FnCoreGenerated.UserIdentifier request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
     {
         responseObserver.onNext(discovery.deleteUser(request));
         responseObserver.onCompleted();
