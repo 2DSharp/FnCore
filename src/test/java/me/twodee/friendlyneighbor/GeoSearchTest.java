@@ -27,7 +27,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class GeoSearchTest
@@ -68,7 +67,7 @@ class GeoSearchTest
         Point location = new Point(88.414486, 22.623806 );
         Distance distance = new Distance(2100, Metrics.KILOMETERS);
         NearQuery query = NearQuery.near(location).maxDistance(distance);
-        GeoNearOperation nearestPoints = Aggregation.geoNear(query, "dis");
+        GeoNearOperation nearestPoints = Aggregation.geoNear(query, "distance");
         MatchOperation withinRadiusOfNearestPoints = Aggregation.match(
                 Criteria.where("radius").gte(2100));
 

@@ -66,11 +66,11 @@ class DiscoveryTest
         List<UserLocation> usersList = new ArrayList<>();
 
         UserLocation resultLoc = new UserLocation("abc123", new UserLocation.Position(10, 10), 10);
-        resultLoc.setDis(100);
+        resultLoc.setDistance(100);
         usersList.add(resultLoc);
 
         resultLoc = new UserLocation("hello", new UserLocation.Position(10, 10), 10);
-        resultLoc.setDis(2.0);
+        resultLoc.setDistance(2.0);
         usersList.add(resultLoc);
 
         when(repository.getUsersNearBy(Mockito.any(UserLocation.class))).thenReturn(usersList);
@@ -84,7 +84,7 @@ class DiscoveryTest
         assertThat(nearbyUsers.getUserLocations().size(), equalTo(2));
         Assertions.assertThat(nearbyUsers.getUserLocations()).extracting("id")
                 .containsOnly("abc123", "hello");
-        Assertions.assertThat(nearbyUsers.getUserLocations()).extracting("dis")
+        Assertions.assertThat(nearbyUsers.getUserLocations()).extracting("distance")
                 .containsOnly(100, 2.0);
     }
 
@@ -109,11 +109,11 @@ class DiscoveryTest
         List<UserLocation> usersList = new ArrayList<>();
 
         UserLocation loc = new UserLocation("abc123", new UserLocation.Position(10, 10), 10);
-        loc.setDis(10);
+        loc.setDistance(10);
         usersList.add(loc);
 
         loc = new UserLocation("hello", new UserLocation.Position(10, 10), 10);
-        loc.setDis(2.0);
+        loc.setDistance(2.0);
         usersList.add(loc);
 
         when(repository.getUsersNearBy(Mockito.anyString())).thenReturn(usersList);
@@ -126,7 +126,7 @@ class DiscoveryTest
         assertThat(nearbyUsers.getUserLocations().size(), equalTo(2));
         Assertions.assertThat(nearbyUsers.getUserLocations()).extracting("id")
                 .containsOnly("abc123", "hello");
-        Assertions.assertThat(nearbyUsers.getUserLocations()).extracting("dis")
+        Assertions.assertThat(nearbyUsers.getUserLocations()).extracting("distance")
                 .containsOnly(10, 2.0);
     }
 }

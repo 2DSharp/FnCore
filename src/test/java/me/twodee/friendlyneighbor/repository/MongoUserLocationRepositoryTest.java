@@ -95,7 +95,7 @@ class MongoUserLocationRepositoryTest
         template.save(new UserLocation("Delhi", new UserLocation.Position(28.2258241, 77.5837057), 1200));
 
         List<UserLocation> users = repository.getUsersNearBy("abc123");
-        users.forEach(r -> System.out.println(r.getDis()));
+        users.forEach(r -> System.out.println(r.getDistance()));
         assertThat(users).extracting("id").doesNotContain("Delhi");
     }
 
@@ -107,7 +107,7 @@ class MongoUserLocationRepositoryTest
         template.save(new UserLocation("Kolkata", new UserLocation.Position(22.507449, 88.329317), 100));
 
         List<UserLocation> users = repository.getUsersNearBy("abc123");
-        users.forEach(r -> System.out.println(r.getDis()));
+        users.forEach(r -> System.out.println(r.getDistance()));
         assertThat(users).extracting("id").containsExactly("Kolkata");
     }
 
@@ -123,7 +123,7 @@ class MongoUserLocationRepositoryTest
         List<UserLocation> users = repository.getUsersNearBy("abc123");
 
         assertThat(users).extracting("id").containsOnly("Kolkata", "Delhi");
-        assertThat(users).extracting("dis").isNotNull();
+        assertThat(users).extracting("distance").isNotNull();
     }
 
     @Test
@@ -139,7 +139,7 @@ class MongoUserLocationRepositoryTest
         List<UserLocation> users = repository.getUsersNearBy(userLocation);
 
         assertThat(users).extracting("id").containsOnly("Kolkata", "Delhi");
-        assertThat(users).extracting("dis").isNotNull();
+        assertThat(users).extracting("distance").isNotNull();
     }
 
     @Test
@@ -206,7 +206,7 @@ class MongoUserLocationRepositoryTest
         assertThat(userLocation.getRadius(), equalTo(400.0));
         assertThat(userLocation.getPosition().getLatitude(), equalTo(22.507449));
         assertThat(userLocation.getPosition().getLongitude(), equalTo(88.34));
-        assertNull(userLocation.getDis());
+        assertNull(userLocation.getDistance());
     }
 
     @Test

@@ -125,7 +125,7 @@ public class Discovery
     private FnCoreGenerated.UserNearby createDtoUser(UserLocation userLocation)
     {
         return FnCoreGenerated.UserNearby.newBuilder()
-                .setDistance(userLocation.getDis().doubleValue())
+                .setDistance(userLocation.getDistance().doubleValue())
                 .setUserId(userLocation.getId())
                 .build();
     }

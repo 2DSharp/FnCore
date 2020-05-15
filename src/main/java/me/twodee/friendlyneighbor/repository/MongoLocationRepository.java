@@ -89,7 +89,7 @@ public class MongoLocationRepository implements LocationRepository
     private UserLocation setDistanceInGeoResult(GeoResult<UserLocation> locationGeoResult)
     {
         UserLocation location = locationGeoResult.getContent();
-        location.setDis(locationGeoResult.getDistance().in(Metrics.KILOMETERS).getValue());
+        location.setDistance(locationGeoResult.getDistance().in(Metrics.KILOMETERS).getValue());
         return location;
     }
 
