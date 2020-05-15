@@ -1,6 +1,5 @@
 package me.twodee.friendlyneighbor.service;
 
-import me.twodee.friendlyneighbor.FnCoreGenerated;
 import me.twodee.friendlyneighbor.dto.ResultObject;
 import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
@@ -32,21 +31,6 @@ class DiscoveryTest
     void initMock()
     {
         MockitoAnnotations.initMocks(this);
-    }
-
-    // TODO: Remove this
-    FnCoreGenerated.SearchAreaRequest getRequest()
-    {
-        FnCoreGenerated.Location location = FnCoreGenerated.Location.newBuilder()
-                .setLatitude(22.0)
-                .setLongitude(77.0)
-                .build();
-
-        return FnCoreGenerated.SearchAreaRequest.newBuilder()
-                .setLocation(location)
-                .setRadius(2)
-                .setUserId("test")
-                .build();
     }
 
     @Test
