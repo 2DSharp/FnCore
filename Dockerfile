@@ -6,8 +6,7 @@ RUN echo 'Copying files...'
 COPY src /home/app/src
 COPY pom.xml /home/app
 RUN echo 'Downloading dependencies...'
-COPY pom.xml /tmp/pom.xml
-RUN mvn -B -f /tmp/pom.xml -s /usr/share/maven/ref/settings-docker.xml dependency:go-offline
+RUN mvn -B -f /home/app/pom.xml -s /usr/share/maven/ref/settings-docker.xml dependency:go-offline
 RUN echo 'Building...'
 RUN mvn -f /home/app/pom.xml package
 
