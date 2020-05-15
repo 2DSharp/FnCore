@@ -1,6 +1,8 @@
 package me.twodee.friendlyneighbor.service;
 
 import me.twodee.friendlyneighbor.FnCoreGenerated;
+import me.twodee.friendlyneighbor.dto.Notification;
+import me.twodee.friendlyneighbor.dto.UserLocationsDTO;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
@@ -21,7 +23,7 @@ public class Discovery
         this.repository = repository;
     }
 
-    public FnCoreGenerated.RequestResult registerUser(FnCoreGenerated.RegistrationRequest request)
+    public FnCoreGenerated.RequestResult saveUserLocation(FnCoreGenerated.RegistrationRequest request)
     {
         UserLocation userLocation = new UserLocation(request.getUserId(),
                                                      new UserLocation.Position(request.getLocation().getLatitude(),
@@ -33,13 +35,36 @@ public class Discovery
         return FnCoreGenerated.RequestResult.newBuilder().setSuccess(false).build();
     }
 
-    public FnCoreGenerated.NearbyUsersResult lookupNearbyUsersByLocation(FnCoreGenerated.SearchAreaRequest request)
+    public UserLocationsDTO lookupNearbyUsersByLocation(UserLocation location)
     {
         try {
-            UserLocation userLocation = new UserLocation(request.getUserId(),
-                                                         new UserLocation.Position(request.getLocation().getLatitude(),
-                                                                                   request.getLocation().getLongitude()),
-                                                         request.getRadius());
+            return new UserLocationsDTO(repository.getUsersNearBy(location));
+        } catch (InvalidUser e) {
+            return buildErrorDTO(e);
+        }
+    }
+
+    private UserLocationsDTO buildErrorDTO(Throwable e)
+    {
+        Notification note = new Notification();
+        if (e instanceof InvalidUser) {
+            note.addError("userId", "The supplied User ID doesn't exist");
+        }
+        return new UserLocationsDTO(note);
+    }
+
+    /**
+     * @param location
+     * @return
+     * @deprecated
+     */
+    public FnCoreGenerated.NearbyUsersResult lookupNearbyUsersByLocation(FnCoreGenerated.SearchAreaRequest location)
+    {
+        try {
+            UserLocation userLocation = new UserLocation(location.getUserId(),
+                                                         new UserLocation.Position(location.getLocation().getLatitude(),
+                                                                                   location.getLocation().getLongitude()),
+                                                         location.getRadius());
             List<FnCoreGenerated.UserNearby> users = buildUserList(repository.getUsersNearBy(userLocation));
             return buildResult(users);
 
@@ -48,10 +73,24 @@ public class Discovery
         }
     }
 
-    public FnCoreGenerated.NearbyUsersResult lookupNearbyUsersByUserId(FnCoreGenerated.UserIdentifier request)
+    public UserLocationsDTO lookupNearbyUsersByUserId(String requestingUid)
     {
         try {
-            List<FnCoreGenerated.UserNearby> users = buildUserList(repository.getUsersNearBy(request.getUserId()));
+            return new UserLocationsDTO(repository.getUsersNearBy(requestingUid));
+        } catch (InvalidUser e) {
+            return buildErrorDTO(e);
+        }
+    }
+
+    /**
+     * @param identifier
+     * @return
+     * @deprecated
+     */
+    public FnCoreGenerated.NearbyUsersResult lookupNearbyUsersByUserId(FnCoreGenerated.UserIdentifier identifier)
+    {
+        try {
+            List<FnCoreGenerated.UserNearby> users = buildUserList(repository.getUsersNearBy(identifier.getUserId()));
             return buildResult(users);
 
         } catch (InvalidUser e) {

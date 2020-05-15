@@ -18,7 +18,7 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     @Override
     public void saveUserLocation(FnCoreGenerated.RegistrationRequest request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
     {
-        responseObserver.onNext(discovery.registerUser(request));
+        responseObserver.onNext(discovery.saveUserLocation(request));
         responseObserver.onCompleted();
     }
 
