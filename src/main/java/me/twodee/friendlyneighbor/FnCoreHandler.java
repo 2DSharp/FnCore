@@ -29,7 +29,6 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
         responseObserver.onCompleted();
     }
 
-
     @Override
     public void deleteUserLocation(FnCoreGenerated.UserIdentifier request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
     {
@@ -56,7 +55,8 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
 
     private FnCoreGenerated.RequestResult buildRequestResult(ResultObject result)
     {
-        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build();
+        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(
+                !result.getNotification().hasErrors()).putAllErrors(result.getNotification().getErrors()).build();
     }
 
     @Override
