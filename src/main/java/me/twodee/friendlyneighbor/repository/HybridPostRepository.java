@@ -1,5 +1,6 @@
 package me.twodee.friendlyneighbor.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import org.springframework.data.domain.Sort;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 /**
  * HybridPostRepository uses Redis for caching posts along with Mongo for permanent storage
  */
+@Slf4j
 public class HybridPostRepository implements PostRepository
 {
     private final MongoTemplate mongoTemplate;
@@ -69,6 +71,7 @@ public class HybridPostRepository implements PostRepository
             } catch (JedisDataException e) {
                 // Someone occupied the list
                 // Claim it back
+                log.warn("Invalid type value has been occupying keyspace " + key);
                 jedis.del(key);
                 putIntoList(jedis, key, post.getId());
             }
@@ -93,22 +96,33 @@ public class HybridPostRepository implements PostRepository
             String key = getKey(userId);
 
             if (jedis.exists(key)) {
-                // He's fresh, reset expiry
-                jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(30));
-                // Return the entire list, for now
-                return fetchPosts(jedis.lrange(key, 0, -1));
+                try {
+                    // He's fresh, reset expiry
+                    jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(30));
+                    // Return the entire list, for now
+                    return fetchPosts(jedis.lrange(key, 0, -1));
+                } catch (JedisDataException e) {
+                    log.warn("Invalid type value has been occupying keyspace " + key);
+                    jedis.del(key);
+                    return fetchAndRehydrate(key, nearbyUsers, jedis);
+                }
             }
             else {
-                List<String> ids = nearbyUsers.stream()
-                        .map(UserLocation::getId)
-                        .collect(Collectors.toList());
-                List<Post> results = pullPosts(ids);
-                // Hydrate the feed of the user
-                // Attach at the end of the array, thus preserving order
-                results.forEach(post -> jedis.rpush(key, post.getId()));
-                return results;
+                return fetchAndRehydrate(key, nearbyUsers, jedis);
             }
         }
+    }
+
+    private List<Post> fetchAndRehydrate(String key, List<UserLocation> nearbyUsers, Jedis jedis)
+    {
+        List<String> ids = nearbyUsers.stream()
+                .map(UserLocation::getId)
+                .collect(Collectors.toList());
+        List<Post> results = pullPosts(ids);
+        // Hydrate the feed of the user
+        // Attach at the end of the array, thus preserving order
+        results.forEach(post -> jedis.rpush(key, post.getId()));
+        return results;
     }
 
     private List<Post> fetchPosts(List<String> postIds)

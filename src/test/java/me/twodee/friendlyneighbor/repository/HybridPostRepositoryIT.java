@@ -254,6 +254,58 @@ class HybridPostRepositoryIT
         }
     }
 
+    @Test
+    void fetchPostsInCache_NotAListRehydrated()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.set(getKey("test"), "evil");
+
+            mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+            mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+            mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+
+            repository.findAllForUser("test", nearbyUsers);
+
+            assertThat(jedis.llen(getKey("test")), equalTo(3L));
+            Assertions.assertThat(jedis.lrange(getKey("test"), 0, -1)).containsExactly("p3", "p2", "p1");
+        }
+    }
+
+    @Test
+    void fetchPostsInCache_NotAListCorrectData()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.set(getKey("test"), "evil");
+
+            mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+            mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+            mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+
+            List<Post> feed = repository.findAllForUser("test", nearbyUsers);
+            Assertions.assertThat(feed).extracting("id").containsExactly("p3", "p2", "p1");
+            Assertions.assertThat(feed).extracting("location").extracting("id")
+                    .containsExactly("xyz", "xyz", "abc123");
+        }
+    }
+
     private String getKey(String id)
     {
         return FEED_NAMESPACE + ":" + id;
