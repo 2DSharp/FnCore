@@ -111,6 +111,11 @@
             <artifactId>jedis</artifactId>
             <version>3.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.kstyrc</groupId>
+            <artifactId>embedded-redis</artifactId>
+            <version>0.6</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${artifactId}-core</finalName>
