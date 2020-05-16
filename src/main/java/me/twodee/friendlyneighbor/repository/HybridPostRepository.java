@@ -113,7 +113,7 @@ public class HybridPostRepository implements PostRepository
 
     private List<Post> fetchPosts(List<String> postIds)
     {
-        Query query = Query.query(Criteria.where("id").in(postIds));
+        Query query = Query.query(Criteria.where("id").in(postIds)).with(Sort.by(Sort.Direction.DESC, "time"));
         return mongoTemplate.find(query, Post.class);
     }
 
