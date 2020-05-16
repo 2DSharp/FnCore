@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -200,6 +201,56 @@ class HybridPostRepositoryIT
         try (Jedis jedis = jedisPool.getResource()) {
             assertThat(jedis.llen(getKey("test")), equalTo(3L));
             Assertions.assertThat(jedis.lrange(getKey("test"), 0, -1)).containsExactly("p3", "p2", "p1");
+        }
+    }
+
+    @Test
+    void fetchPostsInCache_ExpiryExtended()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.lpush(getKey("test"), "p3", "p2", "p1");
+
+            List<Post> feed = repository.findAllForUser("test", nearbyUsers);
+            assertThat(jedis.ttl(getKey("test")), equalTo(TimeUnit.DAYS.toSeconds(30)));
+        }
+    }
+
+    @Test
+    void fetchPostsInCache_CorrectPostData()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+        try (Jedis jedis = jedisPool.getResource()) {
+            // Although we have 3 posts persisted, we should grab only 2 posts from the list
+            jedis.lpush(getKey("test"), "p1");
+            jedis.lpush(getKey("test"), "p2");
+
+            List<Post> feed = repository.findAllForUser("test", nearbyUsers);
+            assertThat(feed.size(), equalTo(2));
+            Assertions.assertThat(feed).extracting("location").extracting("distance").containsExactly(10, 20);
+            Assertions.assertThat(feed).extracting("location").extracting("id").containsExactly("xyz", "abc123");
         }
     }
 
