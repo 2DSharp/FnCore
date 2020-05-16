@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface PostRepository
 {
-    void save(Post post);
+    Post save(Post post);
 
-    void forwardToUsers(List<UserLocation> userLocations);
+    void forwardToUsers(List<UserLocation> userLocations, Post post);
 
     List<Post> findAllForUser(String userId);
 }
