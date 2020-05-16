@@ -23,7 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class MongoUserLocationRepositoryTest
+class MongoUserLocationRepositoryIT
 {
     private MongodExecutable mongodExecutable;
     private MongoTemplate template;
