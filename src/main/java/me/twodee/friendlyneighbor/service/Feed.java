@@ -27,20 +27,14 @@ public class Feed
 
     public ResultObject pushRequestToNearbyUsers(String postId, UserLocation currentUserLocation)
     {
-        Post persistedPost = repository.save(new Post(postId, currentUserLocation, LocalDateTime.now()));
-        UserLocationsResult usersNearby = discovery.lookupNearbyUsersByLocation(currentUserLocation);
-        repository.forwardToUsers(usersNearby.getUserLocations(), persistedPost);
-
+        saveAndPush(currentUserLocation, new Post(postId, currentUserLocation, LocalDateTime.now()));
         return new SuccessResult();
     }
 
     public ResultObject pushRequestToNearbyUsers(String postId, String userId)
     {
         UserLocation currentUserLocation = discovery.getUserLocation(userId);
-        Post persistedPost = repository.save(new Post(postId, currentUserLocation, LocalDateTime.now()));
-        UserLocationsResult usersNearby = discovery.lookupNearbyUsersByLocation(currentUserLocation);
-        repository.forwardToUsers(usersNearby.getUserLocations(), persistedPost);
-
+        saveAndPush(currentUserLocation, new Post(postId, currentUserLocation, LocalDateTime.now()));
         return new SuccessResult();
     }
 
@@ -49,5 +43,12 @@ public class Feed
         return new PostResults(
                 repository.findAllForUser(userId, discovery.lookupNearbyUsersByUserId(userId).getUserLocations()));
 
+    }
+
+    private void saveAndPush(UserLocation currentUserLocation, Post post)
+    {
+        Post persistedPost = repository.save(post);
+        UserLocationsResult usersNearby = discovery.lookupNearbyUsersByLocation(currentUserLocation);
+        repository.forwardToUsers(usersNearby.getUserLocations(), persistedPost);
     }
 }

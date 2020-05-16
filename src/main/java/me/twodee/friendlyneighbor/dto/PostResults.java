@@ -14,5 +14,4 @@ import java.util.List;
 public class PostResults extends ResultObject
 {
     private List<String> posts;
-
 }
