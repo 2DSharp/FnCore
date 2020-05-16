@@ -20,21 +20,21 @@ import java.util.stream.Collectors;
  */
 public class HybridPostRepository implements PostRepository
 {
-    private final MongoTemplate template;
+    private final MongoTemplate mongoTemplate;
     private final JedisPool jedisPool;
     private static final String FEED_NAMESPACE = "FN_CORE.FEED";
 
     @Inject
-    public HybridPostRepository(MongoTemplate template, JedisPool jedisPool)
+    public HybridPostRepository(MongoTemplate mongoTemplate, JedisPool jedisPool)
     {
-        this.template = template;
+        this.mongoTemplate = mongoTemplate;
         this.jedisPool = jedisPool;
     }
 
     @Override
     public Post save(Post post)
     {
-        return template.save(post);
+        return mongoTemplate.save(post);
     }
 
     @Override
@@ -103,8 +103,9 @@ public class HybridPostRepository implements PostRepository
                         .map(UserLocation::getId)
                         .collect(Collectors.toList());
                 List<Post> results = pullPosts(ids);
+                // Hydrate the feed of the user
                 // Attach at the end of the array, thus preserving order
-                results.parallelStream().forEach(post -> jedis.rpush(key, post.getId()));
+                results.forEach(post -> jedis.rpush(key, post.getId()));
                 return results;
             }
         }
@@ -113,13 +114,13 @@ public class HybridPostRepository implements PostRepository
     private List<Post> fetchPosts(List<String> postIds)
     {
         Query query = Query.query(Criteria.where("id").in(postIds));
-        return template.find(query, Post.class);
+        return mongoTemplate.find(query, Post.class);
     }
 
     private List<Post> pullPosts(List<String> locations)
     {
         Query query = Query.query(Criteria.where("location.id").in(locations)).with(
                 Sort.by(Sort.Direction.DESC, "time"));
-        return template.find(query, Post.class);
+        return mongoTemplate.find(query, Post.class);
     }
 }

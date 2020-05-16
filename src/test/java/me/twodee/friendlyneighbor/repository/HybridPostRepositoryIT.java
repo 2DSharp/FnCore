@@ -10,6 +10,7 @@ import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class HybridPostRepositoryIT
 {
     private MongodExecutable mongodExecutable;
-    private MongoTemplate template;
+    private MongoTemplate mongoTemplate;
     private RedisServer redisServer;
     private JedisPool jedisPool;
     private static final String FEED_NAMESPACE = "FN_CORE.FEED";
@@ -49,7 +50,7 @@ class HybridPostRepositoryIT
         MongodStarter starter = MongodStarter.getDefaultInstance();
         mongodExecutable = starter.prepare(mongodConfig);
         mongodExecutable.start();
-        template = new MongoTemplate(MongoClients.create(), "test");
+        mongoTemplate = new MongoTemplate(MongoClients.create(), "test");
     }
 
     void startRedis() throws IOException
@@ -77,7 +78,7 @@ class HybridPostRepositoryIT
     @Test
     void testFanoutOutOfCache()
     {
-        HybridPostRepository repository = new HybridPostRepository(template, jedisPool);
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         nearbyUsers.add(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
         nearbyUsers.add(new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100));
@@ -98,7 +99,7 @@ class HybridPostRepositoryIT
     @Test
     void testFanoutInCache_PostOnTopOfList()
     {
-        HybridPostRepository repository = new HybridPostRepository(template, jedisPool);
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         nearbyUsers.add(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
         nearbyUsers.add(new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100));
@@ -119,7 +120,7 @@ class HybridPostRepositoryIT
     @Test
     void testFanoutInCache_ListHasBeenUpdated()
     {
-        HybridPostRepository repository = new HybridPostRepository(template, jedisPool);
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         nearbyUsers.add(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
         nearbyUsers.add(new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100));
@@ -139,7 +140,7 @@ class HybridPostRepositoryIT
     @Test
     void testFanoutInCache_IndexOccupiedByNonList()
     {
-        HybridPostRepository repository = new HybridPostRepository(template, jedisPool);
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         nearbyUsers.add(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
         nearbyUsers.add(new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100));
@@ -153,6 +154,52 @@ class HybridPostRepositoryIT
 
             assertTrue(jedis.exists(getKey("abc123")));
             assertThat(jedis.lpop(getKey("abc123")), equalTo("a"));
+        }
+    }
+
+    @Test
+    void fetchPostsOutOfCache_Order()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+
+        List<Post> feed = repository.findAllForUser("test", nearbyUsers);
+        Assertions.assertThat(feed).extracting("id").containsExactly("p3", "p2", "p1");
+        Assertions.assertThat(feed).extracting("location").extracting("id")
+                .containsExactly("xyz", "xyz", "abc123");
+    }
+
+    @Test
+    void fetchPostsOutOfCache_Rehydrate()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+
+        repository.findAllForUser("test", nearbyUsers);
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            assertThat(jedis.llen(getKey("test")), equalTo(3L));
+            Assertions.assertThat(jedis.lrange(getKey("test"), 0, -1)).containsExactly("p3", "p2", "p1");
         }
     }
 
