@@ -69,7 +69,7 @@ public class HybridPostRepository implements PostRepository
     }
 
     @Override
-    public List<String> findAllForUser(String userId, List<UserLocation> nearbyUsers)
+    public List<Post> findAllForUser(String userId, List<UserLocation> nearbyUsers)
     {
         try (Jedis jedis = jedisPool.getResource()) {
             String key = FEED_NAMESPACE + ":" + userId;
@@ -78,19 +78,25 @@ public class HybridPostRepository implements PostRepository
                 // He's fresh, reset expiry
                 jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(30));
                 // Return the entire list, for now
-                return jedis.lrange(key, 0, -1);
+                return fetchPosts(jedis.lrange(key, 0, -1));
             }
             else {
 
                 List<String> ids = nearbyUsers.stream()
                         .map(UserLocation::getId)
                         .collect(Collectors.toList());
-                List<String> results = pullPosts(ids).stream().map(Post::getId).collect(Collectors.toList());
+                List<Post> results = pullPosts(ids);
                 // Attach at the end of the array, thus preserving order
-                results.parallelStream().forEach(post -> jedis.rpush(key, post));
+                results.parallelStream().forEach(post -> jedis.rpush(key, post.getId()));
                 return results;
             }
         }
+    }
+
+    private List<Post> fetchPosts(List<String> postIds)
+    {
+        Query query = Query.query(Criteria.where("id").in(postIds));
+        return template.find(query, Post.class);
     }
 
     private List<Post> pullPosts(List<String> locations)

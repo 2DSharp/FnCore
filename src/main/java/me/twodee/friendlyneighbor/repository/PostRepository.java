@@ -11,5 +11,5 @@ public interface PostRepository
 
     void forwardToUsers(List<UserLocation> userLocations, Post post);
 
-    List<String> findAllForUser(String userId, List<UserLocation> nearbyUsers);
+    List<Post> findAllForUser(String userId, List<UserLocation> nearbyUsers);
 }
