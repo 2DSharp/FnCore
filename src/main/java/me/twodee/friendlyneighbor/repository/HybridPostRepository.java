@@ -81,7 +81,6 @@ public class HybridPostRepository implements PostRepository
                 return fetchPosts(jedis.lrange(key, 0, -1));
             }
             else {
-
                 List<String> ids = nearbyUsers.stream()
                         .map(UserLocation::getId)
                         .collect(Collectors.toList());
