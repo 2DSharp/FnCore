@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>RELEASE</version>
+            <version>5.7.0-M1</version>
             <scope>test</scope>
         </dependency>
 
@@ -118,7 +118,7 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>${artifactId}-core</finalName>
+        <finalName>${project.artifactId}-core</finalName>
         <extensions>
             <extension>
                 <groupId>kr.motd.maven</groupId>
