@@ -3,9 +3,21 @@
 FNCore provides the core service functionality for the FriendlyNeighbor project. 
 It does the heavy lifting for other services with data transfer based on gRPC/Protocol Buffers.
 
-## Build Instructions
+## Getting started
 
-If you don't have a copy of the pre-compiled binary, ask me at 2d@twodee.me.
+To get started with FnCore you need to obtain a binary of the FnCore build. They are available at
+the [releases](https://github.com/2DSharp/FriendlyNeighborCore/releases) section. You can use the jar
+file to directly run the application with the default configuration. 
+(Custom configuration will be available in future releases)
+
+To run, you need to need to have **Java 8 (Not above)** installed.
+
+```java -jar target/friendlyneighbor-core-jar-with-dependencies.jar```
+
+
+If you'd like to build from source, follow along:
+
+## Build Instructions
 
 For building the project do the following:
 
@@ -14,7 +26,13 @@ Clone the project
 git clone https://github.com/2dsharp/FriendlyNeighborCore.git
 cd FriendlyNeighborCore/
 ```
-Once you are done cloning, do either of the following methods.
+
+### Configuration
+
+To choose a custom port number, server name etc. head over to the [configuration.properties](https://github.com/2DSharp/FriendlyNeighborCore/blob/master/src/main/resources/config.properties) file in the `src/main/resources/` directory 
+and change the configuration to your preferences.
+
+Once you are done configuring, do either of the following methods.
 
 ### Building with Maven (For developers)
 
@@ -40,8 +58,12 @@ Run again and the issue should be gone. If it persists, create an issue.
 ### Building with Docker (For consumers)
 
 If you'd like to **use the FnCore API**, run it in a container with **Docker**.
-
 Docker will download all the dependencies for you. Helper scripts are available to run them:
+
+**Warning:** You will need to set Mongo's `mongo.database` property in `configuration.properties`
+to a proper hostname/IP Address for the service to recognize from inside the container.
+
+By default it looks for Mongo inside the container itself and will fail.
 
 ```
 # Make sure the scripts are executable
@@ -56,16 +78,17 @@ sudo chmod +x run.sh
 ```
 ---
 
-The application will be using port *9120* for any communication with other services over gRPC.
+The service by default will be using port *9120* for any communication with other services over gRPC.
 
 Use the `.proto` files at `src/main/proto` to use the API.
 
-The service requires **MongoDB** to be running on its default port for persisting data. 
+By default, the service requires **MongoDB** to be running on its default port for persisting data. 
 If you are running on Docker you'll have to setup networking between the database server and FnCore yourself.
 
 ### TODO:
 
-* Configurable Mongo connection
-* Easy networking with Docker
-* Support Java 8+
-* Pre-compiled binaries
+* [X] Configurable Mongo connection
+* [X] Easy networking with Docker
+* [ ] Support Java 8+
+* [X] Pre-compiled binaries
+* [ ] Add build script for configuration
