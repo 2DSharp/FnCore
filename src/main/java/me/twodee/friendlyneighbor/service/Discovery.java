@@ -61,6 +61,11 @@ public class Discovery
         }
     }
 
+    public UserLocation getUserLocation(String userId)
+    {
+        return repository.findById(userId);
+    }
+
     private ResultObject somethingWentWrong(Throwable e)
     {
         log.severe(Arrays.toString(e.getStackTrace()));
