@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -54,25 +55,42 @@ public class HybridPostRepository implements PostRepository
     private void fanout(UserLocation location, Post post)
     {
         try (Jedis jedis = jedisPool.getResource()) {
-            String key = FEED_NAMESPACE + ":" + location.getId();
-            // Create their feed, since we expect smaller numbers
-            // Expires after 30 days
-            if (!jedis.exists(key)) {
-                jedis.lpush(key, post.getId());
-                jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(30));
-            }
-            else {
-                // Append to the already existing list
-                jedis.lpushx(key, post.getId());
+            String key = getKey(location.getId());
+            try {
+                // Create their feed, since we expect smaller numbers
+                // Expires after 30 days
+                if (!jedis.exists(key)) {
+                    putIntoList(jedis, key, post.getId());
+                }
+                else {
+                    // Append to the already existing list
+                    jedis.lpushx(key, post.getId());
+                }
+            } catch (JedisDataException e) {
+                // Someone occupied the list
+                // Claim it back
+                jedis.del(key);
+                putIntoList(jedis, key, post.getId());
             }
         }
+    }
+
+    private void putIntoList(Jedis jedis, String key, String value)
+    {
+        jedis.lpush(key, value);
+        jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(30));
+    }
+
+    private String getKey(String id)
+    {
+        return FEED_NAMESPACE + ":" + id;
     }
 
     @Override
     public List<Post> findAllForUser(String userId, List<UserLocation> nearbyUsers)
     {
         try (Jedis jedis = jedisPool.getResource()) {
-            String key = FEED_NAMESPACE + ":" + userId;
+            String key = getKey(userId);
 
             if (jedis.exists(key)) {
                 // He's fresh, reset expiry
