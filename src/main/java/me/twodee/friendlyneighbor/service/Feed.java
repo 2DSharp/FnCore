@@ -10,6 +10,7 @@ import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.repository.PostRepository;
 
 import javax.inject.Inject;
+import java.time.LocalDateTime;
 
 @Log
 public class Feed
@@ -26,7 +27,7 @@ public class Feed
 
     public ResultObject pushRequestToNearbyUsers(String postId, UserLocation currentUserLocation)
     {
-        Post persistedPost = repository.save(new Post(postId, currentUserLocation));
+        Post persistedPost = repository.save(new Post(postId, currentUserLocation, LocalDateTime.now()));
         UserLocationsResult usersNearby = discovery.lookupNearbyUsersByLocation(currentUserLocation);
         repository.forwardToUsers(usersNearby.getUserLocations(), persistedPost);
 
@@ -36,7 +37,7 @@ public class Feed
     public ResultObject pushRequestToNearbyUsers(String postId, String userId)
     {
         UserLocation currentUserLocation = discovery.getUserLocation(userId);
-        Post persistedPost = repository.save(new Post(postId, currentUserLocation));
+        Post persistedPost = repository.save(new Post(postId, currentUserLocation, LocalDateTime.now()));
         UserLocationsResult usersNearby = discovery.lookupNearbyUsersByLocation(currentUserLocation);
         repository.forwardToUsers(usersNearby.getUserLocations(), persistedPost);
 
@@ -45,7 +46,8 @@ public class Feed
 
     public PostResults fetchRequestsForUser(String userId)
     {
-        return new PostResults(repository.findAllForUser(userId));
+        return new PostResults(
+                repository.findAllForUser(userId, discovery.lookupNearbyUsersByUserId(userId).getUserLocations()));
 
     }
 }
