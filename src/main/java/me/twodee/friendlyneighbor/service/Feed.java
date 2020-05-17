@@ -1,10 +1,7 @@
 package me.twodee.friendlyneighbor.service;
 
 import lombok.extern.java.Log;
-import me.twodee.friendlyneighbor.dto.PostResults;
-import me.twodee.friendlyneighbor.dto.ResultObject;
-import me.twodee.friendlyneighbor.dto.SuccessResult;
-import me.twodee.friendlyneighbor.dto.UserLocationsResult;
+import me.twodee.friendlyneighbor.dto.*;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.repository.PostRepository;
@@ -33,7 +30,11 @@ public class Feed
 
     public ResultObject pushRequestToNearbyUsers(String postId, String userId)
     {
-        UserLocation currentUserLocation = discovery.getUserLocation(userId);
+        UserLocationResult result = discovery.getUserLocation(userId);
+        if (result.getNotification().hasErrors()) {
+            return new ResultObject(result.getNotification().getErrors());
+        }
+        UserLocation currentUserLocation = result.userLocation;
         saveAndPush(currentUserLocation, new Post(postId, currentUserLocation, LocalDateTime.now()));
         return new SuccessResult();
     }
