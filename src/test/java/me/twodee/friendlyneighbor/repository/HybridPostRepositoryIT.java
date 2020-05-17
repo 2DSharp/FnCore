@@ -205,6 +205,29 @@ class HybridPostRepositoryIT
     }
 
     @Test
+    void fetchPostsOutOfCache_ExcludePosition()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+
+        List<Post> feed = repository.findAllForUser("test", nearbyUsers);
+        Assertions.assertThat(feed).extracting("location")
+                .extracting("position")
+                .asList()
+                .containsOnlyNulls();
+    }
+
+    @Test
     void fetchPostsInCache_ExpiryExtended()
     {
         HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
@@ -251,6 +274,34 @@ class HybridPostRepositoryIT
             assertThat(feed.size(), equalTo(2));
             Assertions.assertThat(feed).extracting("location").extracting("distance").containsExactly(10, 20);
             Assertions.assertThat(feed).extracting("location").extracting("id").containsExactly("xyz", "abc123");
+        }
+    }
+
+    @Test
+    void fetchPostsInCache_ExcludePosition()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+        try (Jedis jedis = jedisPool.getResource()) {
+            // Although we have 3 posts persisted, we should grab only 2 posts from the list
+            jedis.lpush(getKey("test"), "p1");
+            jedis.lpush(getKey("test"), "p2");
+
+            List<Post> feed = repository.findAllForUser("test", nearbyUsers);
+            Assertions.assertThat(feed).extracting("location")
+                    .extracting("position")
+                    .asList()
+                    .containsOnlyNulls();
         }
     }
 
