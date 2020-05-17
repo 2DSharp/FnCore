@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HybridPostRepositoryIT
@@ -356,6 +357,55 @@ class HybridPostRepositoryIT
                     .containsExactly("xyz", "xyz", "abc123");
         }
     }
+
+    @Test
+    void fetchPostsEmpty_ReturnsEmptyListNotNull()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        List<Post> feed = repository.findAllForUser("test", nearbyUsers);
+
+        assertNotNull(feed);
+        assertTrue(feed.isEmpty());
+    }
+
+    @Test
+    void testInConsistentCache()
+    {
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        List<UserLocation> nearbyUsers = new ArrayList<>();
+        UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
+        l1.setDistance(20);
+        UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
+        l2.setDistance(10);
+        nearbyUsers.add(l1);
+        nearbyUsers.add(l2);
+
+        mongoTemplate.save(new Post("p1", l1, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p2", l2, LocalDateTime.now()));
+        mongoTemplate.save(new Post("p3", l2, LocalDateTime.now()));
+        try (Jedis jedis = jedisPool.getResource()) {
+            // Although we have 3 posts persisted, we should grab only 2 posts from the list
+            jedis.lpush(getKey("test"), "p1");
+            jedis.lpush(getKey("test"), "invalid_post1");
+            jedis.lpush(getKey("test"), "invalid_post2");
+            jedis.lpush(getKey("test"), "p2");
+
+            List<Post> feed = repository.findAllForUser("test", nearbyUsers);
+
+            Assertions.assertThat(feed).extracting("id").containsExactly("p2", "p1");
+            Assertions.assertThat(feed).extracting("location").extracting("id")
+                    .containsExactly("xyz", "abc123");
+        }
+    }
+
 
     private String getKey(String id)
     {
