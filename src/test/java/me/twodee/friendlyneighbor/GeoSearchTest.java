@@ -55,16 +55,17 @@ class GeoSearchTest
     }
 
     @Test
-    void test()
+    void testGeoSearchBehavior()
     {
-        template.indexOps(UserLocation.class).ensureIndex(new GeospatialIndex("position") );
+        template.indexOps(UserLocation.class).ensureIndex(new GeospatialIndex("position"));
 
-        System.out.println(template.save(new UserLocation("Outside", new UserLocation.Position(10.5837057, 70.2258241), 100)));
-        template.save( new UserLocation("Mumbai", new UserLocation.Position(19.416575, 72.807543), 1100));
+        System.out.println(
+                template.save(new UserLocation("Outside", new UserLocation.Position(10.5837057, 70.2258241), 100)));
+        template.save(new UserLocation("Mumbai", new UserLocation.Position(19.416575, 72.807543), 1100));
         template.save(new UserLocation("Kolkata", new UserLocation.Position(22.507449, 88.329317), 2100));
         template.save(new UserLocation("Delhi", new UserLocation.Position(28.2258241, 77.5837057), 2100));
 
-        Point location = new Point(88.414486, 22.623806 );
+        Point location = new Point(88.414486, 22.623806);
         Distance distance = new Distance(2100, Metrics.KILOMETERS);
         NearQuery query = NearQuery.near(location).maxDistance(distance);
         GeoNearOperation nearestPoints = Aggregation.geoNear(query, "distance");
