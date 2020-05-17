@@ -20,7 +20,7 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     private final Feed feed;
 
     @Inject
-    public FnCoreHandler(Discovery discovery, Feed feed)
+    FnCoreHandler(Discovery discovery, Feed feed)
     {
         this.discovery = discovery;
         this.feed = feed;

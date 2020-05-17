@@ -16,7 +16,7 @@ public class Feed
     private final PostRepository repository;
 
     @Inject
-    public Feed(Discovery discovery, PostRepository repository)
+    Feed(Discovery discovery, PostRepository repository)
     {
         this.discovery = discovery;
         this.repository = repository;

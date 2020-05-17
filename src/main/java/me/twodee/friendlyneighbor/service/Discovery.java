@@ -18,7 +18,7 @@ public class Discovery
     private final LocationRepository repository;
 
     @Inject
-    public Discovery(LocationRepository repository)
+    Discovery(LocationRepository repository)
     {
         this.repository = repository;
     }
