@@ -1,6 +1,7 @@
 package me.twodee.friendlyneighbor.service;
 
 import me.twodee.friendlyneighbor.dto.ResultObject;
+import me.twodee.friendlyneighbor.dto.UserLocationResult;
 import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
@@ -163,5 +164,27 @@ class DiscoveryTest
 
         assertTrue(res.getNotification().hasErrors());
         assertThat(res.getNotification().getErrors().get("internal"), equalTo(ResultObject.SOMETHING_WENT_WRONG));
+    }
+
+    @Test
+    void testGetUserLocationSuccess()
+    {
+        when(repository.findById("abc")).thenReturn(new UserLocation("abc", new UserLocation.Position(2, 3), 2.3));
+        Discovery discovery = new Discovery(repository);
+        UserLocationResult result = discovery.getUserLocation("abc");
+
+        assertFalse(result.getNotification().hasErrors());
+        assertThat(result.userLocation.getId(), equalTo("abc"));
+        assertThat(result.userLocation.getRadius(), equalTo(2.3));
+    }
+
+    @Test
+    void testGetUserLocationFailure()
+    {
+        when(repository.findById(any())).thenReturn(null);
+        Discovery discovery = new Discovery(repository);
+        UserLocationResult result = discovery.getUserLocation("abc");
+        assertTrue(result.getNotification().hasErrors());
+        assertTrue(result.getNotification().getErrors().containsKey("userId"));
     }
 }

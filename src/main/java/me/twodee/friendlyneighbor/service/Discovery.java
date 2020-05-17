@@ -3,6 +3,7 @@ package me.twodee.friendlyneighbor.service;
 import lombok.extern.java.Log;
 import me.twodee.friendlyneighbor.dto.Notification;
 import me.twodee.friendlyneighbor.dto.ResultObject;
+import me.twodee.friendlyneighbor.dto.UserLocationResult;
 import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
@@ -61,9 +62,22 @@ public class Discovery
         }
     }
 
-    public UserLocation getUserLocation(String userId)
+    public UserLocationResult getUserLocation(String userId)
     {
-        return repository.findById(userId);
+        UserLocation location = repository.findById(userId);
+        if (location == null) {
+            UserLocationResult result = new UserLocationResult();
+            result.setNotification(invalidUserNotification());
+            return result;
+        }
+        return new UserLocationResult(location);
+    }
+
+    private Notification invalidUserNotification()
+    {
+        Notification note = new Notification();
+        note.addError("userId", "The supplied User ID doesn't exist");
+        return note;
     }
 
     private ResultObject somethingWentWrong(Throwable e)
