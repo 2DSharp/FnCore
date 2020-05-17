@@ -107,6 +107,7 @@ class FeedTest
         Feed feed = new Feed(discovery, repository);
         when(discovery.lookupNearbyUsersByUserId(any())).thenReturn(new UserLocationsResult(new ArrayList<>()));
         when(repository.findAllForUser(any(), any())).thenReturn(new ArrayList<>());
+        when(discovery.getUserLocation(any())).thenReturn(new UserLocationResult(new UserLocation()));
         PostResults results = feed.fetchRequestsForUser("uid");
 
         assertFalse(results.getNotification().hasErrors());
@@ -132,6 +133,7 @@ class FeedTest
     {
         Feed feed = new Feed(discovery, repository);
         when(discovery.lookupNearbyUsersByUserId(any())).thenReturn(new UserLocationsResult(new ArrayList<>()));
+        when(discovery.getUserLocation(any())).thenReturn(new UserLocationResult(new UserLocation()));
         PostResults results = feed.fetchRequestsForUser("uid");
 
         assertFalse(results.getNotification().hasErrors());
