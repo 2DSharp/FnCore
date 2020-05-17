@@ -24,9 +24,11 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 
+import static me.twodee.friendlyneighbor.component.Util.haversine;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
 
 
 class GeoSearchTest
@@ -76,6 +78,14 @@ class GeoSearchTest
         AggregationResults<UserLocation> res = template.aggregate(aggregation, "location", UserLocation.class);
 
         assertThat(res.getMappedResults().size(), equalTo(2));
-         res.getMappedResults().forEach(r -> assertThat(r.getId(), anyOf(equalTo("Kolkata"), equalTo("Delhi"))));
+        res.getMappedResults().forEach(r -> assertThat(r.getId(), anyOf(equalTo("Kolkata"), equalTo("Delhi"))));
+
+        res.getMappedResults().forEach(System.out::println);
+
+        assertThat(Math.abs(res.getMappedResults().get(0).getDistance().doubleValue() -
+                                    haversine(22.623806, 88.414486, 22.507449, 88.329317)),
+                   lessThan(1.0));
     }
+
+
 }
