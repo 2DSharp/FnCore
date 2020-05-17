@@ -17,7 +17,6 @@ public class LocationModule extends AbstractModule
 {
     @Override
     protected void configure()
-
     {
         bind(LocationRepository.class).to(MongoLocationRepository.class);
         bind(PostRepository.class).to(HybridPostRepository.class);
