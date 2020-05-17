@@ -1,4 +1,5 @@
 # FriendlyNeighborCore
+[![Build Status](https://api.cirrus-ci.com/github/2DSharp/FriendlyNeighborCore.svg)](https://cirrus-ci.com/github/2DSharp/FriendlyNeighborCore)
 
 FNCore provides the core service functionality for the FriendlyNeighbor project. 
 It does the heavy lifting for other services with data transfer based on gRPC/Protocol Buffers.
