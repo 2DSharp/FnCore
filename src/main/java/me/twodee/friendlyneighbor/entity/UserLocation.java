@@ -24,7 +24,7 @@ public class UserLocation
     @Id
     private String id;
     private double[] position;
-    private Number dis;
+    private Number distance;
     private double radius;
 
     public UserLocation(String id, Position position, double radius)

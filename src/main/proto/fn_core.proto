@@ -6,16 +6,39 @@ option java_generic_services = true;
 
 /* FNCore provides the core functionalities of FriendlyNeighbor */
 service FnCore {
-    rpc RegisterUser (RegistrationRequest) returns (RequestResult) {
+    rpc SaveUserLocation (RegistrationRequest) returns (RequestResult) {
     }
-    rpc DeleteUser (UserIdentifier) returns (RequestResult) {
+    rpc DeleteUserLocation (UserIdentifier) returns (RequestResult) {
     }
     // Given a search request, findUsersInCircle returns users in the vicinity with their distance
-    rpc findUsersInCircleByLocation (SearchAreaRequest) returns (NearbyUsersResult) {
+    rpc FindUsersInCircleByLocation (SearchAreaRequest) returns (NearbyUsersResult) {
     }
-    rpc findUsersInCircleById (UserIdentifier) returns (NearbyUsersResult) {
+    rpc FindUsersInCircleById (UserIdentifier) returns (NearbyUsersResult) {
+    }
+    rpc ForwardRequestNearbyDefaultLocation (PostData) returns (RequestResult) {
+    }
+    rpc ForwardRequestNearbyCustomLocation (PostData) returns (RequestResult) {
     }
 
+    rpc FetchRequestsNearby (UserIdentifier) returns (RequestsNearby) {
+    }
+}
+
+message PostData {
+    string userId = 1;
+    Location location = 2;
+    double radius = 3;
+    string postId = 4;
+}
+
+message RequestsNearby {
+    repeated PostOutput requests = 1;
+    RequestResult metaResult = 2;
+}
+
+message PostOutput {
+    string postId = 1;
+    double distance = 2;
 }
 
 // The request message containing the user's name.

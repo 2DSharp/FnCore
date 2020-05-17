@@ -4,8 +4,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClients;
+import me.twodee.friendlyneighbor.repository.HybridPostRepository;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 import me.twodee.friendlyneighbor.repository.MongoLocationRepository;
+import me.twodee.friendlyneighbor.repository.PostRepository;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.io.IOException;
@@ -17,6 +19,7 @@ public class LocationModule extends AbstractModule
     protected void configure()
     {
         bind(LocationRepository.class).to(MongoLocationRepository.class);
+        bind(PostRepository.class).to(HybridPostRepository.class);
     }
 
     @Provides

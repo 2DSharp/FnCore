@@ -1,114 +1,98 @@
 package me.twodee.friendlyneighbor.service;
 
-import me.twodee.friendlyneighbor.FnCoreGenerated;
+import lombok.extern.java.Log;
+import me.twodee.friendlyneighbor.dto.Notification;
+import me.twodee.friendlyneighbor.dto.ResultObject;
+import me.twodee.friendlyneighbor.dto.UserLocationResult;
+import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Arrays;
 
+@Log
 public class Discovery
 {
     private final LocationRepository repository;
 
     @Inject
-    public Discovery(LocationRepository repository)
+    Discovery(LocationRepository repository)
     {
         this.repository = repository;
     }
 
-    public FnCoreGenerated.RequestResult registerUser(FnCoreGenerated.RegistrationRequest request)
-    {
-        UserLocation userLocation = new UserLocation(request.getUserId(),
-                                                     new UserLocation.Position(request.getLocation().getLatitude(),
-                                                                               request.getLocation().getLongitude()),
-                                                     request.getRadius());
-        if (repository.save(userLocation).equals(userLocation)) {
-            return FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build();
-        }
-        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(false).build();
-    }
-
-    public FnCoreGenerated.NearbyUsersResult lookupNearbyUsersByLocation(FnCoreGenerated.SearchAreaRequest request)
+    public ResultObject saveUserLocation(UserLocation location)
     {
         try {
-            UserLocation userLocation = new UserLocation(request.getUserId(),
-                                                         new UserLocation.Position(request.getLocation().getLatitude(),
-                                                                                   request.getLocation().getLongitude()),
-                                                         request.getRadius());
-            List<FnCoreGenerated.UserNearby> users = buildUserList(repository.getUsersNearBy(userLocation));
-            return buildResult(users);
-
-        } catch (InvalidUser e) {
-            return buildFailedResult(e);
+            repository.save(location);
+            return new ResultObject();
+        } catch (Throwable e) {
+            return somethingWentWrong(e);
         }
     }
 
-    public FnCoreGenerated.NearbyUsersResult lookupNearbyUsersByUserId(FnCoreGenerated.UserIdentifier request)
+    public ResultObject deleteUserLocation(String id)
     {
         try {
-            List<FnCoreGenerated.UserNearby> users = buildUserList(repository.getUsersNearBy(request.getUserId()));
-            return buildResult(users);
+            repository.deleteById(id);
+            return new ResultObject();
+        } catch (Throwable e) {
+            return somethingWentWrong(e);
+        }
 
+    }
+
+    public UserLocationsResult lookupNearbyUsersByUserId(String requestingUid)
+    {
+        try {
+            return new UserLocationsResult(repository.getUsersNearBy(requestingUid));
         } catch (InvalidUser e) {
-            return FnCoreGenerated.NearbyUsersResult
-                    .newBuilder()
-                    .setMetaResult(FnCoreGenerated.RequestResult.newBuilder()
-                                           .setSuccess(false)
-                                           .putAllErrors(getErrors(e))
-                                           .build()).build();
+            return buildErrorDTO(e);
         }
     }
 
-    private FnCoreGenerated.NearbyUsersResult buildFailedResult(Throwable e)
+    public UserLocationsResult lookupNearbyUsersByLocation(UserLocation location)
     {
-        return FnCoreGenerated.NearbyUsersResult
-                .newBuilder()
-                .setMetaResult(FnCoreGenerated.RequestResult.newBuilder()
-                                       .setSuccess(false)
-                                       .putAllErrors(getErrors(e))
-                                       .build()).build();
+        try {
+            return new UserLocationsResult(repository.getUsersNearBy(location));
+        } catch (InvalidUser e) {
+            return buildErrorDTO(e);
+        }
     }
 
-    Map<String, String> getErrors(Throwable e)
+    public UserLocationResult getUserLocation(String userId)
     {
-        Map<String, String> errors = new HashMap<>();
+        UserLocation location = repository.findById(userId);
+        if (location == null) {
+            UserLocationResult result = new UserLocationResult();
+            result.setNotification(invalidUserNotification());
+            return result;
+        }
+        return new UserLocationResult(location);
+    }
+
+    private Notification invalidUserNotification()
+    {
+        Notification note = new Notification();
+        note.addError("userId", "The supplied User ID doesn't exist");
+        return note;
+    }
+
+    private ResultObject somethingWentWrong(Throwable e)
+    {
+        log.severe(Arrays.toString(e.getStackTrace()));
+        return new ResultObject("internal", ResultObject.SOMETHING_WENT_WRONG);
+    }
+
+    private UserLocationsResult buildErrorDTO(Throwable e)
+    {
+        Notification note = new Notification();
         if (e instanceof InvalidUser) {
-            errors.put("userId", "The supplied User ID doesn't exist");
+            note.addError("userId", "The supplied User ID doesn't exist");
         }
-        return errors;
+        return new UserLocationsResult(note);
     }
 
-    private FnCoreGenerated.UserNearby createDtoUser(UserLocation userLocation)
-    {
-        return FnCoreGenerated.UserNearby.newBuilder()
-                .setDistance(userLocation.getDis().doubleValue())
-                .setUserId(userLocation.getId())
-                .build();
-    }
-
-    private FnCoreGenerated.NearbyUsersResult buildResult(List<FnCoreGenerated.UserNearby> results)
-    {
-        return FnCoreGenerated.NearbyUsersResult.newBuilder()
-                .setMetaResult(FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build())
-                .addAllUser(results)
-                .build();
-    }
-
-    private List<FnCoreGenerated.UserNearby> buildUserList(List<UserLocation> users)
-    {
-        return users.stream()
-                .map(this::createDtoUser)
-                .collect(Collectors.toList());
-    }
-
-    public FnCoreGenerated.RequestResult deleteUser(FnCoreGenerated.UserIdentifier request)
-    {
-        repository.deleteById(request.getUserId());
-        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build();
-    }
 }

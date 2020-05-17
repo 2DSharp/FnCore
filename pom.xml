@@ -6,10 +6,12 @@
 
     <groupId>me.twodee</groupId>
     <artifactId>friendlyneighbor</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.2.0-rc-alpha.3</version>
     <packaging>jar</packaging>
     <properties>
         <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <dependencies>
@@ -53,7 +55,7 @@
         <!-- https://mvnrepository.com/artifact/org.hamcrest/hamcrest-all -->
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
+            <artifactId>hamcrest-all</artifactId>
             <version>1.3</version>
             <scope>test</scope>
         </dependency>
@@ -61,7 +63,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>RELEASE</version>
+            <version>5.7.0-M1</version>
             <scope>test</scope>
         </dependency>
 
@@ -106,9 +108,19 @@
             <version>6.0.53</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.kstyrc</groupId>
+            <artifactId>embedded-redis</artifactId>
+            <version>0.6</version>
+        </dependency>
     </dependencies>
     <build>
-        <finalName>${artifactId}-core</finalName>
+        <finalName>${project.artifactId}-core</finalName>
         <extensions>
             <extension>
                 <groupId>kr.motd.maven</groupId>
