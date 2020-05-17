@@ -24,8 +24,7 @@ public class Feed
 
     public ResultObject pushRequestToNearbyUsers(String postId, UserLocation currentUserLocation)
     {
-        saveAndPush(currentUserLocation, new Post(postId, currentUserLocation, LocalDateTime.now()));
-        return new SuccessResult();
+        return saveAndPush(currentUserLocation, new Post(postId, currentUserLocation, LocalDateTime.now()));
     }
 
     public ResultObject pushRequestToNearbyUsers(String postId, String userId)
@@ -35,21 +34,30 @@ public class Feed
             return new ResultObject(result.getNotification().getErrors());
         }
         UserLocation currentUserLocation = result.userLocation;
-        saveAndPush(currentUserLocation, new Post(postId, currentUserLocation, LocalDateTime.now()));
-        return new SuccessResult();
+        return saveAndPush(currentUserLocation, new Post(postId, currentUserLocation, LocalDateTime.now()));
     }
 
     public PostResults fetchRequestsForUser(String userId)
     {
-        return new PostResults(
-                repository.findAllForUser(userId, discovery.lookupNearbyUsersByUserId(userId).getUserLocations()));
+        UserLocationsResult usersNearby = discovery.lookupNearbyUsersByUserId(userId);
+        if (usersNearby.getNotification().hasErrors()) {
+            PostResults results = new PostResults();
+            results.setNotification(usersNearby.getNotification());
+            return results;
+        }
 
+        return new PostResults(repository.findAllForUser(userId, usersNearby.getUserLocations()));
     }
 
-    private void saveAndPush(UserLocation currentUserLocation, Post post)
+    private ResultObject saveAndPush(UserLocation currentUserLocation, Post post)
     {
         Post persistedPost = repository.save(post);
         UserLocationsResult usersNearby = discovery.lookupNearbyUsersByLocation(currentUserLocation);
+        if (usersNearby.getNotification().hasErrors()) {
+            return new ResultObject(usersNearby.getNotification().getErrors());
+        }
+
         repository.forwardToUsers(usersNearby.getUserLocations(), persistedPost);
+        return new SuccessResult();
     }
 }
