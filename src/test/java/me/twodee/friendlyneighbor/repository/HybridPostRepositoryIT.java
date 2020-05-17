@@ -246,7 +246,7 @@ class HybridPostRepositoryIT
             jedis.lpush(getKey("test"), "p3", "p2", "p1");
 
             List<Post> feed = repository.findAllForUser("test", nearbyUsers);
-            assertThat(jedis.ttl(getKey("test")), equalTo(TimeUnit.DAYS.toSeconds(30)));
+            assertThat(jedis.ttl(getKey("test")), equalTo(TimeUnit.DAYS.toSeconds(20)));
         }
     }
 

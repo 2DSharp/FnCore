@@ -12,7 +12,9 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -25,12 +27,16 @@ public class HybridPostRepository implements PostRepository
     private final MongoTemplate mongoTemplate;
     private final JedisPool jedisPool;
     private static final String FEED_NAMESPACE = "FN_CORE.FEED";
+    Properties properties;
+    public static final long CACHE_EXPIRY_DEFAULT_DAYS = 10;
+    private long expiryInDays = CACHE_EXPIRY_DEFAULT_DAYS;
 
     @Inject
     public HybridPostRepository(MongoTemplate mongoTemplate, JedisPool jedisPool)
     {
         this.mongoTemplate = mongoTemplate;
         this.jedisPool = jedisPool;
+        initProperties();
     }
 
     @Override
@@ -44,6 +50,19 @@ public class HybridPostRepository implements PostRepository
     {
         userLocations.parallelStream()
                 .forEach(location -> fanout(location, post));
+    }
+
+    private void initProperties()
+    {
+        try {
+            properties = new Properties();
+            properties.load(getClass().getClassLoader().getResourceAsStream("config.properties"));
+            expiryInDays = Long.parseLong(
+                    properties.getProperty("feed.expiry", String.valueOf(CACHE_EXPIRY_DEFAULT_DAYS)));
+        } catch (IOException e) {
+            expiryInDays = CACHE_EXPIRY_DEFAULT_DAYS;
+            log.error(e.getMessage(), e);
+        }
     }
 
     /**
@@ -81,7 +100,7 @@ public class HybridPostRepository implements PostRepository
     private void putIntoList(Jedis jedis, String key, String value)
     {
         jedis.lpush(key, value);
-        jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(30));
+        jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(expiryInDays));
     }
 
     private String getKey(String id)
@@ -98,7 +117,7 @@ public class HybridPostRepository implements PostRepository
             if (jedis.exists(key)) {
                 try {
                     // He's fresh, reset expiry
-                    jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(30));
+                    jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(expiryInDays));
                     // Return the entire list, for now
                     return fetchPosts(jedis.lrange(key, 0, -1));
                 } catch (JedisDataException e) {
