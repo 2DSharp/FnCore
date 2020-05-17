@@ -7,6 +7,7 @@ import me.twodee.friendlyneighbor.dto.ResultObject;
 import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.service.Discovery;
+import me.twodee.friendlyneighbor.service.Feed;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,9 @@ class FnCoreHandlerTest
     @Mock
     Discovery discovery;
 
+    @Mock
+    Feed feed;
+
     /**
      * Creates an in-process server before each test
      */
@@ -44,7 +48,7 @@ class FnCoreHandlerTest
     {
         MockitoAnnotations.initMocks(this);
         inProcessServer = new InProcessServer();
-        inProcessServer.start(new FnCoreHandler(discovery));
+        inProcessServer.start(new FnCoreHandler(discovery, feed));
         channel = InProcessChannelBuilder
                 .forName("test")
                 .directExecutor()
