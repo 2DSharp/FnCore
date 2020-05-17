@@ -18,6 +18,8 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static me.twodee.friendlyneighbor.component.Util.haversine;
+
 /**
  * HybridPostRepository uses Redis for caching posts along with Mongo for permanent storage
  */
@@ -65,34 +67,47 @@ public class HybridPostRepository implements PostRepository
         }
     }
 
+    private String serializeForRedis(String postId)
+    {
+        return postId;
+    }
+
+    private String deserializeIdFromRedis(String serializedVal)
+    {
+        return serializedVal.split(":")[0];
+    }
+
+
     /**
      * Fan-out to all users in the vicinity. We can optimize by using LPUSHX and hydrating on pull later
      * If we happen to have a lot of users. For a few couple hundred, create their own timelines.
      * Once we start running out of RAM, start evicting old feeds.
      *
-     * @param location
+     * @param otherUserLocation
      * @param post
      */
-    private void fanout(UserLocation location, Post post)
+    private void fanout(UserLocation otherUserLocation, Post post)
     {
         try (Jedis jedis = jedisPool.getResource()) {
-            String key = getKey(location.getId());
+            String key = getKey(otherUserLocation.getId());
+            String toStore = serializeForRedis(post.getId());
+
             try {
                 // Create their feed, since we expect smaller numbers
                 // Expires after 30 days
                 if (!jedis.exists(key)) {
-                    putIntoList(jedis, key, post.getId());
+                    putIntoList(jedis, key, toStore);
                 }
                 else {
                     // Append to the already existing list
-                    jedis.lpushx(key, post.getId());
+                    jedis.lpushx(key, toStore);
                 }
             } catch (JedisDataException e) {
                 // Someone occupied the list
                 // Claim it back
                 log.warn("Invalid type value has been occupying keyspace " + key);
                 jedis.del(key);
-                putIntoList(jedis, key, post.getId());
+                putIntoList(jedis, key, toStore);
             }
         }
     }
@@ -109,27 +124,32 @@ public class HybridPostRepository implements PostRepository
     }
 
     @Override
-    public List<Post> findAllForUser(String userId, List<UserLocation> nearbyUsers)
+    public List<Post> findAllForUser(UserLocation userLocation, List<UserLocation> nearbyUsers)
     {
         try (Jedis jedis = jedisPool.getResource()) {
-            String key = getKey(userId);
-
+            String key = getKey(userLocation.getId());
             if (jedis.exists(key)) {
                 try {
                     // He's fresh, reset expiry
                     jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(expiryInDays));
                     // Return the entire list, for now
-                    return fetchPosts(jedis.lrange(key, 0, -1));
+                    return processPostDistances(fetchPostsByPostIds(jedis.lrange(key, 0, -1)), userLocation);
                 } catch (JedisDataException e) {
                     log.warn("Invalid type value has been occupying keyspace " + key);
                     jedis.del(key);
-                    return fetchAndRehydrate(key, nearbyUsers, jedis);
+                    return processPostDistances(fetchAndRehydrate(key, nearbyUsers, jedis), userLocation);
                 }
             }
             else {
-                return fetchAndRehydrate(key, nearbyUsers, jedis);
+                return processPostDistances(fetchAndRehydrate(key, nearbyUsers, jedis), userLocation);
             }
         }
+    }
+
+    private List<Post> processPostDistances(List<Post> posts, UserLocation currentUserLocation)
+    {
+        posts.forEach(post -> updateDistanceAndPosition(currentUserLocation, post));
+        return posts;
     }
 
     private List<Post> fetchAndRehydrate(String key, List<UserLocation> nearbyUsers, Jedis jedis)
@@ -137,25 +157,42 @@ public class HybridPostRepository implements PostRepository
         List<String> ids = nearbyUsers.stream()
                 .map(UserLocation::getId)
                 .collect(Collectors.toList());
-        List<Post> results = pullPosts(ids);
+        List<Post> results = fetchPostsByLocationIds(ids);
         // Hydrate the feed of the user
         // Attach at the end of the array, thus preserving order
         results.forEach(post -> jedis.rpush(key, post.getId()));
+        System.out.println(results);
         return results;
     }
 
-    private List<Post> fetchPosts(List<String> postIds)
+    private void updateDistanceAndPosition(UserLocation currentUserLocation, Post post)
     {
+        UserLocation.Position postPosition = post.getLocation().getPosition();
+        UserLocation.Position currentUserPosition = currentUserLocation.getPosition();
+        post.getLocation().setDistance(haversine(postPosition.getLatitude(),
+                                                 postPosition.getLongitude(),
+                                                 currentUserPosition.getLatitude(),
+                                                 currentUserPosition.getLongitude()));
+        post.getLocation().setPosition(null);
+    }
+
+
+    private List<Post> fetchPostsByPostIds(List<String> postIdsAndDistance)
+    {
+        List<String> postIds = postIdsAndDistance.stream()
+                .map(this::deserializeIdFromRedis)
+                .collect(Collectors.toList());
+
         Query query = Query.query(Criteria.where("id").in(postIds)).with(Sort.by(Sort.Direction.DESC, "time"));
-        query.fields().exclude("location.position");
+
         return mongoTemplate.find(query, Post.class);
     }
 
-    private List<Post> pullPosts(List<String> locations)
+    private List<Post> fetchPostsByLocationIds(List<String> locations)
     {
         Query query = Query.query(Criteria.where("location.id").in(locations)).with(
                 Sort.by(Sort.Direction.DESC, "time"));
-        query.fields().exclude("location.position");
+
         return mongoTemplate.find(query, Post.class);
     }
 }

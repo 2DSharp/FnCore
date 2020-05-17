@@ -122,8 +122,8 @@ class HybridPostRepositoryTest
         postIds.add("");
         postIds.add("");
         List<Post> posts = new ArrayList<>();
-        posts.add(new Post("a", null, LocalDateTime.now()));
-        posts.add(new Post("b", null, LocalDateTime.now()));
+        posts.add(new Post("a", new UserLocation("x", new UserLocation.Position(0, 0), 0), LocalDateTime.now()));
+        posts.add(new Post("b", new UserLocation("x", new UserLocation.Position(0, 0), 0), LocalDateTime.now()));
 
         when(jedis.lrange(anyString(), anyLong(), anyLong())).thenReturn(postIds);
         when(template.find(any(), any(Class.class))).thenReturn(posts);
@@ -134,7 +134,8 @@ class HybridPostRepositoryTest
         locationList.add(new UserLocation("x", new UserLocation.Position(0, 0), 0));
         locationList.add(new UserLocation("y", new UserLocation.Position(0, 0), 0));
 
-        List<Post> result = repository.findAllForUser("abc", locationList);
+        List<Post> result = repository.findAllForUser(
+                new UserLocation("test", new UserLocation.Position(22.507449, 88.34), 2100), locationList);
 
         Assertions.assertThat(result).extracting("id").contains("a", "b");
     }
@@ -149,8 +150,8 @@ class HybridPostRepositoryTest
         postIds.add("");
         postIds.add("");
         List<Post> posts = new ArrayList<>();
-        posts.add(new Post("a", null, LocalDateTime.now()));
-        posts.add(new Post("b", null, LocalDateTime.now()));
+        posts.add(new Post("a", new UserLocation("x", new UserLocation.Position(0, 0), 0), LocalDateTime.now()));
+        posts.add(new Post("b", new UserLocation("x", new UserLocation.Position(0, 0), 0), LocalDateTime.now()));
 
         when(template.find(any(), any(Class.class))).thenReturn(posts);
 
@@ -160,7 +161,8 @@ class HybridPostRepositoryTest
         locationList.add(new UserLocation("x", new UserLocation.Position(0, 0), 0));
         locationList.add(new UserLocation("y", new UserLocation.Position(0, 0), 0));
 
-        List<Post> result = repository.findAllForUser("abc", locationList);
+        List<Post> result = repository.findAllForUser(
+                new UserLocation("test", new UserLocation.Position(22.507449, 88.34), 2100), locationList);
 
         Assertions.assertThat(result).extracting("id").contains("a", "b");
     }

@@ -46,7 +46,8 @@ public class Feed
             return results;
         }
 
-        return new PostResults(repository.findAllForUser(userId, usersNearby.getUserLocations()));
+        return new PostResults(repository.findAllForUser(discovery.getUserLocation(userId).userLocation,
+                                                         usersNearby.getUserLocations()));
     }
 
     private ResultObject saveAndPush(UserLocation currentUserLocation, Post post)
