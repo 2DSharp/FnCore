@@ -13,7 +13,7 @@ file to directly run the application with the default configuration.
 
 To run, you need to need to have **Java 8 (Not above)** installed.
 
-```java -jar target/friendlyneighbor-core-jar-with-dependencies.jar```
+```java -jar fncore-.jar```
 
 
 If you'd like to build from source, follow along:
@@ -54,7 +54,7 @@ There may be cases where a test may fail because of a bug in one of our testing 
 Run again and the issue should be gone. If it persists, create an issue.
 
 * Run the generated binary with:
-```java -jar target/friendlyneighbor-core-jar-with-dependencies.jar```
+```java -jar fncore-0.2.0-rc-alpha.3.jar```
 
 ### Building with Docker (For consumers)
 
