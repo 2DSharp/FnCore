@@ -54,6 +54,12 @@ public class HybridPostRepository implements PostRepository
                 .forEach(location -> fanout(location, post));
     }
 
+    @Override
+    public void deleteById(String id)
+    {
+        mongoTemplate.remove(Query.query(Criteria.where("id").is(id)), Post.class);
+    }
+
     private void initProperties()
     {
         try {

@@ -166,4 +166,25 @@ class HybridPostRepositoryTest
 
         Assertions.assertThat(result).extracting("id").contains("a", "b");
     }
+
+    @Test
+    void fetchAlsoRetrievesDistance()
+    {
+        HybridPostRepository repository = new HybridPostRepository(template, pool);
+        when(pool.getResource()).thenReturn(jedis);
+        when(jedis.exists(anyString())).thenReturn(false);
+        List<Post> posts = new ArrayList<>();
+        posts.add(new Post("a", new UserLocation("x", new UserLocation.Position(0, 0), 0), LocalDateTime.now()));
+
+        when(template.find(any(), any(Class.class))).thenReturn(posts);
+
+        List<UserLocation> locationList = new ArrayList<>();
+
+        locationList.add(new UserLocation("x", new UserLocation.Position(0, 0), 0));
+
+        List<Post> result = repository.findAllForUser(
+                new UserLocation("test", new UserLocation.Position(22.507449, 88.34), 2100), locationList);
+
+        Assertions.assertThat(result).extracting("location").extracting("distance").isNotNull();
+    }
 }

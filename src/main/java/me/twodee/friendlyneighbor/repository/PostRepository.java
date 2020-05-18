@@ -12,4 +12,6 @@ public interface PostRepository
     void forwardToUsers(List<UserLocation> userLocations, Post post);
 
     List<Post> findAllForUser(UserLocation currentUserLocation, List<UserLocation> nearbyUsers);
+
+    void deleteById(String id);
 }

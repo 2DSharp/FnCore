@@ -8,12 +8,12 @@ COPY pom.xml /home/app
 RUN echo 'Downloading dependencies...'
 RUN mvn -B -f /home/app/pom.xml -s /usr/share/maven/ref/settings-docker.xml dependency:go-offline
 RUN echo 'Building...'
-RUN mvn -f /home/app/pom.xml package
+RUN mvn -f /home/app/pom.xml package -P docker
 
 #
 # Package stage
 #
 FROM openjdk:8-jre-slim
-COPY --from=build /home/app/target/friendlyneighbor-core-jar-with-dependencies.jar /usr/local/lib/fncore.jar
+COPY --from=build /home/app/target/friendlyneighbor-core.jar /usr/local/lib/fncore.jar
 EXPOSE 9120
 ENTRYPOINT ["java","-jar","/usr/local/lib/fncore.jar"]

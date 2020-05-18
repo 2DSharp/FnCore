@@ -4,36 +4,77 @@ option java_package = "me.twodee.friendlyneighbor";
 option java_outer_classname = "FnCoreGenerated";
 option java_generic_services = true;
 
-/* FNCore provides the core functionalities of FriendlyNeighbor */
+/*  FNCore provides the core functionalities of FriendlyNeighbor
+    NOTE:
+    For every request, the response comes encapsulated in a message
+    with a Result as metadata to the actual result. Use the
+    metadata to check the success/failure status along with any error
+    messages.
+
+    Error messages are user friendly and can be directly forwarded to the client.
+ */
 service FnCore {
-    rpc SaveUserLocation (RegistrationRequest) returns (RequestResult) {
-    }
-    rpc DeleteUserLocation (UserIdentifier) returns (RequestResult) {
-    }
-    // Given a search request, findUsersInCircle returns users in the vicinity with their distance
-    rpc FindUsersInCircleByLocation (SearchAreaRequest) returns (NearbyUsersResult) {
-    }
-    rpc FindUsersInCircleById (UserIdentifier) returns (NearbyUsersResult) {
-    }
-    rpc ForwardRequestNearbyDefaultLocation (PostData) returns (RequestResult) {
-    }
-    rpc ForwardRequestNearbyCustomLocation (PostData) returns (RequestResult) {
+
+    /* Save (and update) user's default location */
+    rpc SaveUserLocation (RegistrationRequest) returns (Result) {
     }
 
+    /* Delete a user location permanently */
+    rpc DeleteUserLocation (UserIdentifier) returns (Result) {
+    }
+
+    /* Fetch a user's default location */
+    rpc GetUserLocation (UserIdentifier) returns (LocationRadiusResult) {
+    }
+
+    /*  Given a search request with a custom location and radius, find users in the vicinity
+        with their distance
+        You NEED TO PASS THE USER ID
+     */
+    rpc FindUsersInCircleByLocation (SearchAreaRequest) returns (NearbyUsersResult) {
+    }
+
+    /*  Given a search request with a registered UID, find users in the vicinity
+        with their distance
+     */
+    rpc FindUsersInCircleById (UserIdentifier) returns (NearbyUsersResult) {
+    }
+
+    /*  Push a Post to users feeds nearby based on the user identifier */
+    rpc ForwardRequestNearbyCustomLocation (PostData) returns (Result) {
+    }
+
+    /*  Push a Post to users feeds nearby based on a custom location and radius
+        Still needs userId to be transmitted
+     */
+    rpc ForwardRequestNearbyDefaultLocation (PostData) returns (Result) {
+    }
+
+    /*  Pull posts to a users feed based on their identifier */
     rpc FetchRequestsNearby (UserIdentifier) returns (RequestsNearby) {
     }
+
+    /* Delete a request */
+    rpc DeleteRequest (PostData) returns (Result) {
+    }
+}
+
+message LocationRadiusResult {
+    Location location = 1;
+    double radius = 2;
+    Result metaResult = 3;
 }
 
 message PostData {
     string userId = 1;
-    Location location = 2;
-    double radius = 3;
+    Location location = 2; // optional for forwardBy ForwardRequestNearbyDefaultLocation
+    double radius = 3; // optional for forwardBy ForwardRequestNearbyDefaultLocation
     string postId = 4;
 }
 
 message RequestsNearby {
     repeated PostOutput requests = 1;
-    RequestResult metaResult = 2;
+    Result metaResult = 2;
 }
 
 message PostOutput {
@@ -41,8 +82,8 @@ message PostOutput {
     double distance = 2;
 }
 
-// The request message containing the user's name.
 message RegistrationRequest {
+    /* This can also be used for updating a user's default location */
     string userId = 1;
     Location location = 2;
     double radius = 3;
@@ -52,7 +93,10 @@ message UserIdentifier {
     string userId = 1;
 }
 
-message RequestResult {
+message Result {
+    /*  Each result from an API call will return an object containing
+        the Result message as metadata. Run checks first before proceeding
+    */
     bool success = 1;
     map<string, string> errors = 2;
 }
@@ -64,7 +108,7 @@ message UserNearby {
 
 message NearbyUsersResult {
     repeated UserNearby user = 1;
-    RequestResult metaResult = 2;
+    Result metaResult = 2;
 }
 
 message Location {

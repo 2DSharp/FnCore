@@ -57,8 +57,14 @@ public class Feed
         if (usersNearby.getNotification().hasErrors()) {
             return new ResultObject(usersNearby.getNotification().getErrors());
         }
-
         repository.forwardToUsers(usersNearby.getUserLocations(), persistedPost);
         return new SuccessResult();
     }
+
+    public ResultObject delete(String postId)
+    {
+        repository.deleteById(postId);
+        return new SuccessResult();
+    }
+
 }
