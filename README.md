@@ -13,7 +13,7 @@ file to directly run the application with the default configuration.
 
 To run, you need to need to have **Java 8 (Not above)** installed.
 
-```java -jar fncore-0.2.0-rc-alpha.3.jar```
+```java -jar fncore-0.2.0-rc1.jar```
 
 
 If you'd like to build from source, follow along:
@@ -49,16 +49,16 @@ I'd personally prefer this method since it can use your local `.m2` repository.
 
 If you already have maven installed in your system, you can compile the source to generate a binary.
 
-* `mvn clean package` to build the system. It will run all the tests in the project. 
-There may be cases where a test may fail because of a bug in one of our testing libraries with mongo.
-Run again and the issue should be gone. If it persists, create an issue.
+* `mvn clean package` to build the system. It will run all the tests in the project and verify everything's alright. 
+A binary will be generated at `target/`, enter the directory.
 
 * Run the generated binary with:
-```java -jar fncore-0.2.0-rc-alpha.3.jar```
+```java -jar  fncore-0.2.0-rc1.jar```
 
 ### Building with Docker (For consumers)
 
-If you'd like to **use the FnCore API**, run it in a container with **Docker**.
+If you'd like to **use the FnCore API**, run it in a container with **Docker** without having to set up maven
+on your own system. This is advantageous if you want to run mongo/redis inside the container.
 Docker will download all the dependencies for you. Helper scripts are available to run them:
 
 **Warning:** You will need to set Mongo's `mongo.database` property in `configuration.properties`
