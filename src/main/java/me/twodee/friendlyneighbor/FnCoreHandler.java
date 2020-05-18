@@ -3,6 +3,7 @@ package me.twodee.friendlyneighbor;
 import io.grpc.stub.StreamObserver;
 import me.twodee.friendlyneighbor.dto.PostResults;
 import me.twodee.friendlyneighbor.dto.ResultObject;
+import me.twodee.friendlyneighbor.dto.UserLocationResult;
 import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
@@ -114,6 +115,34 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
         responseObserver.onCompleted();
     }
 
+    @Override
+    public void getUserLocation(FnCoreGenerated.UserIdentifier request, StreamObserver<FnCoreGenerated.LocationRadiusResult> responseObserver)
+    {
+        UserLocationResult result = discovery.getUserLocation(request.getUserId());
+        responseObserver.onNext(buildUserLocationResult(result));
+        responseObserver.onCompleted();
+    }
+
+    private FnCoreGenerated.LocationRadiusResult buildUserLocationResult(UserLocationResult result)
+    {
+        if (result.getNotification().hasErrors()) {
+            return FnCoreGenerated.LocationRadiusResult.newBuilder()
+                    .setMetaResult(buildMetaResult(result.getNotification().getErrors()))
+                    .build();
+        }
+        UserLocation location = result.userLocation;
+
+        return FnCoreGenerated.LocationRadiusResult.newBuilder()
+                .setLocation(
+                        FnCoreGenerated.Location.newBuilder()
+                                .setLatitude(location.getPosition().getLatitude())
+                                .setLongitude(location.getPosition().getLongitude())
+                                .build()
+                )
+                .setRadius(location.getRadius())
+                .setMetaResult(FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build())
+                .build();
+    }
 
     private FnCoreGenerated.RequestsNearby buildRequestsNearbyResult(PostResults posts)
     {

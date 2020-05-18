@@ -4,6 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import me.twodee.friendlyneighbor.dto.Notification;
 import me.twodee.friendlyneighbor.dto.ResultObject;
+import me.twodee.friendlyneighbor.dto.UserLocationResult;
 import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.service.Discovery;
@@ -206,6 +207,42 @@ class FnCoreHandlerTest
 
         assertFalse(locations.getMetaResult().getSuccess());
         assertThat(locations.getMetaResult().getErrorsMap().get("keyError"), equalTo("valueErr"));
+    }
+
+    @Test
+    void successfulUserLocationFetch()
+    {
+        FnCoreGenerated.UserIdentifier identifier = FnCoreGenerated.UserIdentifier.newBuilder()
+                .setUserId("abc")
+                .build();
+        when(discovery.getUserLocation(any())).thenReturn(new UserLocationResult(
+                new UserLocation("abc", new UserLocation.Position(22.3, 77.0), 10)
+        ));
+
+        FnCoreGenerated.LocationRadiusResult result = fnCoreHandler.getUserLocation(identifier);
+
+        assertTrue(result.getMetaResult().getSuccess());
+        assertThat(result.getLocation().getLatitude(), equalTo(22.3));
+        assertThat(result.getLocation().getLongitude(), equalTo(77.0));
+        assertThat(result.getRadius(), equalTo(10.0));
+    }
+
+    @Test
+    void invalidUserLocationFetch()
+    {
+        FnCoreGenerated.UserIdentifier identifier = FnCoreGenerated.UserIdentifier.newBuilder()
+                .setUserId("abc")
+                .build();
+        UserLocationResult userLocationResult = new UserLocationResult();
+        Notification note = new Notification();
+        note.addError("id", "err");
+        userLocationResult.setNotification(note);
+        when(discovery.getUserLocation(any())).thenReturn(userLocationResult);
+
+        FnCoreGenerated.LocationRadiusResult result = fnCoreHandler.getUserLocation(identifier);
+
+        assertFalse(result.getMetaResult().getSuccess());
+        assertTrue(result.getMetaResult().containsErrors("id"));
     }
 
     public void shutdown() throws InterruptedException

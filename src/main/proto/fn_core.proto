@@ -23,6 +23,10 @@ service FnCore {
     rpc DeleteUserLocation (UserIdentifier) returns (RequestResult) {
     }
 
+    /* Fetch a user's default location */
+    rpc GetUserLocation (UserIdentifier) returns (LocationRadiusResult) {
+    }
+
     /*  Given a search request with a custom location and radius, find users in the vicinity
         with their distance
         You NEED TO PASS THE USER ID
@@ -49,6 +53,12 @@ service FnCore {
     /*  Pull posts to a users feed based on their identifier */
     rpc FetchRequestsNearby (UserIdentifier) returns (RequestsNearby) {
     }
+}
+
+message LocationRadiusResult {
+    Location location = 1;
+    double radius = 2;
+    RequestResult metaResult = 3;
 }
 
 message PostData {
