@@ -1,6 +1,6 @@
 # FriendlyNeighborCore
 [![Build Status](https://api.cirrus-ci.com/github/2DSharp/FriendlyNeighborCore.svg)](https://cirrus-ci.com/github/2DSharp/FriendlyNeighborCore)
-![Java CI with Maven](https://github.com/2DSharp/FriendlyNeighborCore/workflows/Java%20CI%20with%20Maven/badge.svg)
+![Maven Build](https://github.com/2DSharp/FriendlyNeighborCore/workflows/Maven%20Build/badge.svg)
 
 FNCore provides the core service functionality for the FriendlyNeighbor project. 
 It does the heavy lifting for other services with data transfer based on gRPC/Protocol Buffers.
