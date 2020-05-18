@@ -7,7 +7,7 @@ option java_generic_services = true;
 /*  FNCore provides the core functionalities of FriendlyNeighbor
     NOTE:
     For every request, the response comes encapsulated in a message
-    with a RequestResult as metadata to the actual result. Use the
+    with a Result as metadata to the actual result. Use the
     metadata to check the success/failure status along with any error
     messages.
 
@@ -16,11 +16,11 @@ option java_generic_services = true;
 service FnCore {
 
     /* Save (and update) user's default location */
-    rpc SaveUserLocation (RegistrationRequest) returns (RequestResult) {
+    rpc SaveUserLocation (RegistrationRequest) returns (Result) {
     }
 
     /* Delete a user location permanently */
-    rpc DeleteUserLocation (UserIdentifier) returns (RequestResult) {
+    rpc DeleteUserLocation (UserIdentifier) returns (Result) {
     }
 
     /* Fetch a user's default location */
@@ -41,24 +41,28 @@ service FnCore {
     }
 
     /*  Push a Post to users feeds nearby based on the user identifier */
-    rpc ForwardRequestNearbyCustomLocation (PostData) returns (RequestResult) {
+    rpc ForwardRequestNearbyCustomLocation (PostData) returns (Result) {
     }
 
     /*  Push a Post to users feeds nearby based on a custom location and radius
         Still needs userId to be transmitted
      */
-    rpc ForwardRequestNearbyDefaultLocation (PostData) returns (RequestResult) {
+    rpc ForwardRequestNearbyDefaultLocation (PostData) returns (Result) {
     }
 
     /*  Pull posts to a users feed based on their identifier */
     rpc FetchRequestsNearby (UserIdentifier) returns (RequestsNearby) {
+    }
+
+    /* Delete a request */
+    rpc DeleteRequest (PostData) returns (Result) {
     }
 }
 
 message LocationRadiusResult {
     Location location = 1;
     double radius = 2;
-    RequestResult metaResult = 3;
+    Result metaResult = 3;
 }
 
 message PostData {
@@ -70,7 +74,7 @@ message PostData {
 
 message RequestsNearby {
     repeated PostOutput requests = 1;
-    RequestResult metaResult = 2;
+    Result metaResult = 2;
 }
 
 message PostOutput {
@@ -89,9 +93,9 @@ message UserIdentifier {
     string userId = 1;
 }
 
-message RequestResult {
+message Result {
     /*  Each result from an API call will return an object containing
-        the RequestResult message as metadata. Run checks first before proceeding
+        the Result message as metadata. Run checks first before proceeding
     */
     bool success = 1;
     map<string, string> errors = 2;
@@ -104,7 +108,7 @@ message UserNearby {
 
 message NearbyUsersResult {
     repeated UserNearby user = 1;
-    RequestResult metaResult = 2;
+    Result metaResult = 2;
 }
 
 message Location {

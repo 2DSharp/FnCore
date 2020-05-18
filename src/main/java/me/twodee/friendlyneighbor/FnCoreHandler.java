@@ -28,18 +28,18 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     }
 
     @Override
-    public void saveUserLocation(FnCoreGenerated.RegistrationRequest request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
+    public void saveUserLocation(FnCoreGenerated.RegistrationRequest request, StreamObserver<FnCoreGenerated.Result> responseObserver)
     {
         ResultObject result = discovery.saveUserLocation(buildSearchLocation(request));
-        responseObserver.onNext(buildRequestResult(result));
+        responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
     }
 
     @Override
-    public void deleteUserLocation(FnCoreGenerated.UserIdentifier request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
+    public void deleteUserLocation(FnCoreGenerated.UserIdentifier request, StreamObserver<FnCoreGenerated.Result> responseObserver)
     {
         ResultObject result = discovery.deleteUserLocation(request.getUserId());
-        responseObserver.onNext(buildRequestResult(result));
+        responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
     }
 
@@ -67,9 +67,9 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
                                 request.getRadius());
     }
 
-    private FnCoreGenerated.RequestResult buildRequestResult(ResultObject result)
+    private FnCoreGenerated.Result buildResult(ResultObject result)
     {
-        return FnCoreGenerated.RequestResult.newBuilder().setSuccess(
+        return FnCoreGenerated.Result.newBuilder().setSuccess(
                 !result.getNotification().hasErrors()).putAllErrors(result.getNotification().getErrors()).build();
     }
 
@@ -92,18 +92,18 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     }
 
     @Override
-    public void forwardRequestNearbyDefaultLocation(FnCoreGenerated.PostData request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
+    public void forwardRequestNearbyDefaultLocation(FnCoreGenerated.PostData request, StreamObserver<FnCoreGenerated.Result> responseObserver)
     {
         ResultObject result = feed.pushRequestToNearbyUsers(request.getPostId(), request.getUserId());
-        responseObserver.onNext(buildRequestResult(result));
+        responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
     }
 
     @Override
-    public void forwardRequestNearbyCustomLocation(FnCoreGenerated.PostData request, StreamObserver<FnCoreGenerated.RequestResult> responseObserver)
+    public void forwardRequestNearbyCustomLocation(FnCoreGenerated.PostData request, StreamObserver<FnCoreGenerated.Result> responseObserver)
     {
         ResultObject result = feed.pushRequestToNearbyUsers(request.getPostId(), buildSearchLocation(request));
-        responseObserver.onNext(buildRequestResult(result));
+        responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
     }
 
@@ -120,6 +120,14 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     {
         UserLocationResult result = discovery.getUserLocation(request.getUserId());
         responseObserver.onNext(buildUserLocationResult(result));
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void deleteRequest(FnCoreGenerated.PostData request, StreamObserver<FnCoreGenerated.Result> responseObserver)
+    {
+        ResultObject result = feed.delete(request.getPostId());
+        responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
     }
 
@@ -140,7 +148,7 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
                                 .build()
                 )
                 .setRadius(location.getRadius())
-                .setMetaResult(FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build())
+                .setMetaResult(FnCoreGenerated.Result.newBuilder().setSuccess(true).build())
                 .build();
     }
 
@@ -153,7 +161,7 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
         }
 
         return FnCoreGenerated.RequestsNearby.newBuilder()
-                .setMetaResult(FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build())
+                .setMetaResult(FnCoreGenerated.Result.newBuilder().setSuccess(true).build())
                 .addAllRequests(buildNearbyRequestList(posts.getPosts()))
                 .build();
 
@@ -180,7 +188,7 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
         }
 
         return FnCoreGenerated.NearbyUsersResult.newBuilder()
-                .setMetaResult(FnCoreGenerated.RequestResult.newBuilder().setSuccess(true).build())
+                .setMetaResult(FnCoreGenerated.Result.newBuilder().setSuccess(true).build())
                 .addAllUser(buildUserList(results.getUserLocations()))
                 .build();
     }
@@ -200,9 +208,9 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
                 .build();
     }
 
-    private FnCoreGenerated.RequestResult buildMetaResult(Map<String, String> errors)
+    private FnCoreGenerated.Result buildMetaResult(Map<String, String> errors)
     {
-        return FnCoreGenerated.RequestResult.newBuilder()
+        return FnCoreGenerated.Result.newBuilder()
                 .setSuccess(false)
                 .putAllErrors(errors)
                 .build();
