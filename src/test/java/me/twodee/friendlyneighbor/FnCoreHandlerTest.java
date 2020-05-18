@@ -84,7 +84,7 @@ class FnCoreHandlerTest
     {
         when(discovery.saveUserLocation(any())).thenReturn(new ResultObject());
 
-        FnCoreGenerated.RequestResult result = fnCoreHandler.saveUserLocation(
+        FnCoreGenerated.Result result = fnCoreHandler.saveUserLocation(
                 FnCoreGenerated.RegistrationRequest.newBuilder().build());
         assertTrue(result.getSuccess());
     }
@@ -95,7 +95,7 @@ class FnCoreHandlerTest
         when(discovery.saveUserLocation(any())).thenReturn(
                 new ResultObject("internal", ResultObject.SOMETHING_WENT_WRONG));
 
-        FnCoreGenerated.RequestResult result = fnCoreHandler.saveUserLocation(
+        FnCoreGenerated.Result result = fnCoreHandler.saveUserLocation(
                 FnCoreGenerated.RegistrationRequest.newBuilder().build());
 
         assertFalse(result.getSuccess());
@@ -108,7 +108,7 @@ class FnCoreHandlerTest
     {
         when(discovery.deleteUserLocation(anyString())).thenReturn(new ResultObject());
 
-        FnCoreGenerated.RequestResult result = fnCoreHandler.deleteUserLocation(
+        FnCoreGenerated.Result result = fnCoreHandler.deleteUserLocation(
                 FnCoreGenerated.UserIdentifier.newBuilder().build());
         assertTrue(result.getSuccess());
     }
@@ -119,7 +119,7 @@ class FnCoreHandlerTest
         when(discovery.deleteUserLocation(anyString())).thenReturn(
                 new ResultObject("internal", ResultObject.SOMETHING_WENT_WRONG));
 
-        FnCoreGenerated.RequestResult result = fnCoreHandler.deleteUserLocation(
+        FnCoreGenerated.Result result = fnCoreHandler.deleteUserLocation(
                 FnCoreGenerated.UserIdentifier.newBuilder().build());
 
         assertFalse(result.getSuccess());
