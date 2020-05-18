@@ -6,7 +6,7 @@
 
     <groupId>me.twodee</groupId>
     <artifactId>friendlyneighbor</artifactId>
-    <version>0.2.0-rc-alpha.3</version>
+    <version>0.2.0-rc1</version>
     <packaging>jar</packaging>
     <properties>
         <java.version>1.8</java.version>
@@ -119,8 +119,27 @@
             <version>0.6</version>
         </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <finalName>fncore-${project.version}</finalName>
+            </build>
+        </profile>
+        <profile>
+            <id>docker</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <finalName>${project.artifactId}-core</finalName>
+            </build>
+        </profile>
+    </profiles>
     <build>
-        <finalName>${project.artifactId}-core</finalName>
         <extensions>
             <extension>
                 <groupId>kr.motd.maven</groupId>
@@ -155,6 +174,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
             </plugin>
             <plugin>
