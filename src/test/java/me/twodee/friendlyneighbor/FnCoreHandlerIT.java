@@ -12,6 +12,7 @@ import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
+import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.configuration.LocationModule;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -22,6 +23,7 @@ import redis.clients.jedis.JedisPool;
 import redis.embedded.RedisServer;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,7 +54,8 @@ class FnCoreHandlerIT
     {
         inProcessServer = new InProcessServer();
 
-        Injector injector = Guice.createInjector(new LocationModule());
+        Properties properties = new Properties();
+        Injector injector = Guice.createInjector(new LocationModule(FnCoreConfig.createFromProperties(properties)));
         inProcessServer.start(injector.getInstance(FnCoreHandler.class));
         channel = InProcessChannelBuilder
                 .forName("test")
