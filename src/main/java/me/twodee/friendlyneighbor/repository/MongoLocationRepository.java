@@ -4,6 +4,7 @@ import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
 import org.springframework.data.geo.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -26,7 +27,8 @@ public class MongoLocationRepository implements LocationRepository
 
     private void initTemplate()
     {
-        template.indexOps(UserLocation.class).ensureIndex(new GeospatialIndex("position"));
+        template.indexOps(UserLocation.class).ensureIndex(
+                new GeospatialIndex("position").typed(GeoSpatialIndexType.GEO_2DSPHERE));
     }
 
     @Override
@@ -93,7 +95,6 @@ public class MongoLocationRepository implements LocationRepository
         return location;
     }
 
-
     private NearQuery createNearQuery(UserLocation.Position position, double radius)
     {
         Point location = new Point(position.getLongitude(), position.getLatitude());
@@ -101,6 +102,4 @@ public class MongoLocationRepository implements LocationRepository
 
         return NearQuery.near(location).maxDistance(distance);
     }
-
-
 }
