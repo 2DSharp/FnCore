@@ -20,12 +20,15 @@ public class Main
         if (args.length > 0) {
             // The user's specified file takes top priority
             Path path = Paths.get(args[0]);
+            System.out.println(
+                    "Found configuration file! Reading from " + path.getFileName().toAbsolutePath().toString());
             properties.load(Files.newInputStream(path));
         }
         else {
             Path path = Paths.get("fnconfig.properties");
             // Does a fnconfig already exist? Load it
             if (Files.exists(path)) {
+                System.out.println("Found configuration file! Reading from " + path.getFileName().toString());
                 properties.load(Files.newInputStream(path));
             }
         }
