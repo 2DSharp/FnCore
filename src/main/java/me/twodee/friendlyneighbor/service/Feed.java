@@ -24,6 +24,9 @@ public class Feed
 
     public ResultObject pushRequestToNearbyUsers(String postId, UserLocation currentUserLocation)
     {
+        if (currentUserLocation.getRadius() == 0 || currentUserLocation.getPosition().getLatitude() == 0 || currentUserLocation.getPosition().getLongitude() == 0) {
+            return new ResultObject("location", "Location coordinates and/or radius haven't been set.");
+        }
         return saveAndPush(currentUserLocation, new Post(postId, currentUserLocation, LocalDateTime.now()));
     }
 
