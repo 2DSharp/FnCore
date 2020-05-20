@@ -11,6 +11,8 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -30,12 +32,49 @@ class FeedTest
     }
 
     @Test
+    void fanoutWithCustomLocationNoLocationPassed()
+    {
+        Feed feed = new Feed(discovery, repository);
+        ResultObject result = feed.pushRequestToNearbyUsers("p1",
+                                                            new UserLocation());
+        assertTrue(result.getNotification().hasErrors());
+        assertThat(result.getNotification().getErrors().get("location"),
+                   equalTo("Location coordinates and/or radius haven't been set."));
+    }
+
+    @Test
+    void fanoutWithCustomLocationZeroLocation()
+    {
+        Feed feed = new Feed(discovery, repository);
+        ResultObject result = feed.pushRequestToNearbyUsers("p1",
+                                                            new UserLocation("x1", new UserLocation.Position(0, 0),
+                                                                             10));
+        assertTrue(result.getNotification().hasErrors());
+        assertThat(result.getNotification().getErrors().get("location"),
+                   equalTo("Location coordinates and/or radius haven't been set."));
+    }
+
+    @Test
+    void fanoutWithCustomLocationZeroRadius()
+    {
+        Feed feed = new Feed(discovery, repository);
+        ResultObject result = feed.pushRequestToNearbyUsers("p1",
+                                                            new UserLocation("x1", new UserLocation.Position(20, 20),
+                                                                             0));
+        assertTrue(result.getNotification().hasErrors());
+        assertThat(result.getNotification().getErrors().get("location"),
+                   equalTo("Location coordinates and/or radius haven't been set."));
+    }
+
+    @Test
     void fanoutWithCustomLocationSuccessful()
     {
         Feed feed = new Feed(discovery, repository);
         when(discovery.lookupNearbyUsersByLocation(any())).thenReturn(new UserLocationsResult(new ArrayList<>()));
         when(repository.save(any())).thenReturn(new Post());
-        ResultObject result = feed.pushRequestToNearbyUsers("p1", new UserLocation());
+        ResultObject result = feed.pushRequestToNearbyUsers("p1",
+                                                            new UserLocation("test", new UserLocation.Position(23, 20),
+                                                                             10));
         assertFalse(result.getNotification().hasErrors());
     }
 

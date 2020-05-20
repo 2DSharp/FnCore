@@ -1,6 +1,7 @@
 package me.twodee.friendlyneighbor.repository;
 
 import lombok.extern.slf4j.Slf4j;
+import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import org.springframework.data.domain.Sort;
@@ -28,17 +29,31 @@ public class HybridPostRepository implements PostRepository
 {
     private final MongoTemplate mongoTemplate;
     private final JedisPool jedisPool;
-    private static final String FEED_NAMESPACE = "FN_CORE.FEED";
-    Properties properties;
+    private static final String DEFAULT_NAMESPACE = "FN_CORE";
+    private static final String FEED_KEYSPACE = "FEED";
+    private String feedNamespace = DEFAULT_NAMESPACE + "." + FEED_KEYSPACE;
     public static final long CACHE_EXPIRY_DEFAULT_DAYS = 10;
     private long expiryInDays = CACHE_EXPIRY_DEFAULT_DAYS;
 
-    @Inject
+    /**
+     * @param mongoTemplate
+     * @param jedisPool
+     * @deprecated Use a config file instead, kept for testing
+     */
     public HybridPostRepository(MongoTemplate mongoTemplate, JedisPool jedisPool)
     {
         this.mongoTemplate = mongoTemplate;
         this.jedisPool = jedisPool;
         initProperties();
+    }
+
+    @Inject
+    public HybridPostRepository(MongoTemplate mongoTemplate, JedisPool jedisPool, FnCoreConfig config)
+    {
+        this.mongoTemplate = mongoTemplate;
+        this.jedisPool = jedisPool;
+        expiryInDays = config.getFeedCacheExpiry();
+        feedNamespace = config.getRedisKeyspace() + "." + FEED_KEYSPACE;
     }
 
     @Override
@@ -60,10 +75,13 @@ public class HybridPostRepository implements PostRepository
         mongoTemplate.remove(Query.query(Criteria.where("id").is(id)), Post.class);
     }
 
+    /**
+     *
+     */
     private void initProperties()
     {
         try {
-            properties = new Properties();
+            Properties properties = new Properties();
             properties.load(getClass().getClassLoader().getResourceAsStream("config.properties"));
             expiryInDays = Long.parseLong(
                     properties.getProperty("feed.expiry", String.valueOf(CACHE_EXPIRY_DEFAULT_DAYS)));
@@ -97,7 +115,6 @@ public class HybridPostRepository implements PostRepository
         try (Jedis jedis = jedisPool.getResource()) {
             String key = getKey(otherUserLocation.getId());
             String toStore = serializeForRedis(post.getId());
-
             try {
                 // Create their feed, since we expect smaller numbers
                 // Expires after 30 days
@@ -126,7 +143,7 @@ public class HybridPostRepository implements PostRepository
 
     private String getKey(String id)
     {
-        return FEED_NAMESPACE + ":" + id;
+        return feedNamespace + ":" + id;
     }
 
     @Override
@@ -134,7 +151,9 @@ public class HybridPostRepository implements PostRepository
     {
         try (Jedis jedis = jedisPool.getResource()) {
             String key = getKey(userLocation.getId());
+
             if (jedis.exists(key)) {
+
                 try {
                     // He's fresh, reset expiry
                     jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(expiryInDays));
@@ -167,7 +186,6 @@ public class HybridPostRepository implements PostRepository
         // Hydrate the feed of the user
         // Attach at the end of the array, thus preserving order
         results.forEach(post -> jedis.rpush(key, post.getId()));
-        System.out.println(results);
         return results;
     }
 

@@ -4,6 +4,7 @@ import me.twodee.friendlyneighbor.dto.ResultObject;
 import me.twodee.friendlyneighbor.dto.UserLocationResult;
 import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
+import me.twodee.friendlyneighbor.exception.DbFailure;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 import org.assertj.core.api.Assertions;
@@ -35,7 +36,7 @@ class DiscoveryTest
     }
 
     @Test
-    void testInvalidUserOnLookupByLocation() throws InvalidUser
+    void testInvalidUserOnLookupByLocation() throws InvalidUser, DbFailure
     {
         when(repository.getUsersNearBy(Mockito.any(UserLocation.class))).thenThrow(InvalidUser.class);
         Discovery discovery = new Discovery(repository);
@@ -50,7 +51,7 @@ class DiscoveryTest
     }
 
     @Test
-    void testLookupByLocationSuccessful() throws InvalidUser
+    void testLookupByLocationSuccessful() throws InvalidUser, DbFailure
     {
         List<UserLocation> usersList = new ArrayList<>();
 
@@ -78,7 +79,7 @@ class DiscoveryTest
     }
 
     @Test
-    void testInvalidUserOnLookupById() throws InvalidUser
+    void testInvalidUserOnLookupById() throws InvalidUser, DbFailure
     {
         when(repository.getUsersNearBy(Mockito.anyString())).thenThrow(InvalidUser.class);
         Discovery discovery = new Discovery(repository);
@@ -93,7 +94,7 @@ class DiscoveryTest
     }
 
     @Test
-    void testLookupByIdSuccessful() throws InvalidUser
+    void testLookupByIdSuccessful() throws InvalidUser, DbFailure
     {
         List<UserLocation> usersList = new ArrayList<>();
 

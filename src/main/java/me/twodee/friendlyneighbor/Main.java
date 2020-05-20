@@ -2,9 +2,13 @@ package me.twodee.friendlyneighbor;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.configuration.LocationModule;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 
@@ -12,12 +16,31 @@ public class Main
 {
     public static void main(String[] args) throws IOException, InterruptedException
     {
-        Injector injector = Guice.createInjector(new LocationModule());
-        FnCoreHandler service = injector.getInstance(FnCoreHandler.class);
         Properties properties = new Properties();
-        properties.load(Main.class.getClassLoader().getResourceAsStream("config.properties"));
+        if (args.length > 0) {
+            // The user's specified file takes top priority
+            Path path = Paths.get(args[0]);
+            if (Files.exists(path)) {
+                System.out.println(
+                        "Found configuration file! Reading from " + path.getFileName().toAbsolutePath().toString());
+                properties.load(Files.newInputStream(path));
+            }
+        }
+        else {
+            Path path = Paths.get("fnconfig.properties");
+            // Does a fnconfig already exist? Load it
+            if (Files.exists(path)) {
+                System.out.println("Found configuration file! Reading from " + path.getFileName().toString());
+                properties.load(Files.newInputStream(path));
+            }
+        }
+        // If user didn't specify a file and there's no fnconfig, continue with empty props and read defaults
+        FnCoreConfig config = FnCoreConfig.createFromProperties(properties);
 
-        Server server = new Server(Integer.parseInt(properties.getProperty("server.port")), service);
+        assert config != null;
+        Injector injector = Guice.createInjector(new LocationModule(config));
+        FnCoreHandler service = injector.getInstance(FnCoreHandler.class);
+        Server server = new Server(config.getFnCorePort(), service);
         server.start();
     }
 }

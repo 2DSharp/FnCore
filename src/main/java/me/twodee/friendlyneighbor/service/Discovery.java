@@ -6,6 +6,7 @@ import me.twodee.friendlyneighbor.dto.ResultObject;
 import me.twodee.friendlyneighbor.dto.UserLocationResult;
 import me.twodee.friendlyneighbor.dto.UserLocationsResult;
 import me.twodee.friendlyneighbor.entity.UserLocation;
+import me.twodee.friendlyneighbor.exception.DbFailure;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 
@@ -48,7 +49,7 @@ public class Discovery
     {
         try {
             return new UserLocationsResult(repository.getUsersNearBy(requestingUid));
-        } catch (InvalidUser e) {
+        } catch (InvalidUser | DbFailure e) {
             return buildErrorDTO(e);
         }
     }
@@ -57,7 +58,7 @@ public class Discovery
     {
         try {
             return new UserLocationsResult(repository.getUsersNearBy(location));
-        } catch (InvalidUser e) {
+        } catch (InvalidUser | DbFailure e) {
             return buildErrorDTO(e);
         }
     }
@@ -91,6 +92,9 @@ public class Discovery
         Notification note = new Notification();
         if (e instanceof InvalidUser) {
             note.addError("userId", "The supplied User ID doesn't exist");
+        }
+        else if (e instanceof DbFailure) {
+            note.addError("internal", "Something went wrong internally");
         }
         return new UserLocationsResult(note);
     }

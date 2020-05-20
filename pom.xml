@@ -6,7 +6,7 @@
 
     <groupId>me.twodee</groupId>
     <artifactId>friendlyneighbor</artifactId>
-    <version>0.2.0-rc1</version>
+    <version>0.2.0-rc2</version>
     <packaging>jar</packaging>
     <properties>
         <java.version>1.8</java.version>

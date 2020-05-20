@@ -12,6 +12,7 @@ import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
+import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.configuration.LocationModule;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -22,6 +23,7 @@ import redis.clients.jedis.JedisPool;
 import redis.embedded.RedisServer;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,7 +54,8 @@ class FnCoreHandlerIT
     {
         inProcessServer = new InProcessServer();
 
-        Injector injector = Guice.createInjector(new LocationModule());
+        Properties properties = new Properties();
+        Injector injector = Guice.createInjector(new LocationModule(FnCoreConfig.createFromProperties(properties)));
         inProcessServer.start(injector.getInstance(FnCoreHandler.class));
         channel = InProcessChannelBuilder
                 .forName("test")
@@ -387,13 +390,46 @@ class FnCoreHandlerIT
                 .setUserId("abc")
                 .build();
 
-        FnCoreGenerated.Result result = fnCoreHandler.forwardRequestNearbyDefaultLocation(postData);
+        FnCoreGenerated.Result result = fnCoreHandler.forwardRequestNearbyCustomLocation(postData);
         FnCoreGenerated.RequestsNearby requests = fnCoreHandler.fetchRequestsNearby(
                 FnCoreGenerated.UserIdentifier.newBuilder()
                         .setUserId("a")
                         .build());
         assertTrue(result.getSuccess());
         Assertions.assertThat(requests.getRequestsList()).extracting("postId").contains("test");
+    }
+
+    @Test
+    void fanoutWithCustomLocation_NoLocationSet()
+    {
+        registerUsers();
+        FnCoreGenerated.PostData postData = FnCoreGenerated.PostData.newBuilder()
+                .setPostId("test")
+                .setLocation(FnCoreGenerated.Location.newBuilder()
+                                     .setLongitude(73.203)
+                                     .setLatitude(22.878)
+                                     .build())
+                .setUserId("abc")
+                .build();
+
+        FnCoreGenerated.Result result = fnCoreHandler.forwardRequestNearbyCustomLocation(postData);
+        assertFalse(result.getSuccess());
+        assertTrue(result.getErrorsMap().containsKey("location"));
+    }
+
+    @Test
+    void fanoutWithCustomLocation_NoRadiusSet()
+    {
+        registerUsers();
+        FnCoreGenerated.PostData postData = FnCoreGenerated.PostData.newBuilder()
+                .setPostId("test")
+                .setRadius(300)
+                .setUserId("abc")
+                .build();
+
+        FnCoreGenerated.Result result = fnCoreHandler.forwardRequestNearbyCustomLocation(postData);
+        assertFalse(result.getSuccess());
+        assertTrue(result.getErrorsMap().containsKey("location"));
     }
 
     @Test

@@ -4,17 +4,24 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClients;
+import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.repository.HybridPostRepository;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 import me.twodee.friendlyneighbor.repository.MongoLocationRepository;
 import me.twodee.friendlyneighbor.repository.PostRepository;
 import org.springframework.data.mongodb.core.MongoTemplate;
-
-import java.io.IOException;
-import java.util.Properties;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 public class LocationModule extends AbstractModule
 {
+    private final FnCoreConfig config;
+
+    public LocationModule(FnCoreConfig config)
+    {
+        this.config = config;
+    }
+
     @Override
     protected void configure()
     {
@@ -23,13 +30,27 @@ public class LocationModule extends AbstractModule
     }
 
     @Provides
-    MongoTemplate provideMongoTemplate() throws IOException
+    MongoTemplate provideMongoTemplate()
     {
-        Properties prop = new Properties();
-        prop.load(getClass().getClassLoader().getResourceAsStream("config.properties"));
 
         return new MongoTemplate(MongoClients.create(new ConnectionString(
-                "mongodb://" + prop.getProperty("mongo.hostname") + ":" + prop.getProperty("mongo.port"))),
-                                 prop.getProperty("mongo.database"));
+                config.getMongoConnectionString()
+        )), config.getMongoDatabase());
     }
+
+    // TODO: Add additional Jedis config, warm up at instantiation. Create a separate provider.
+    // https://partners-intl.aliyun.com/help/doc-detail/98726.htm
+    @Provides
+    JedisPool provideJedisPool()
+    {
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        return new JedisPool(poolConfig, config.getRedisHostName(), config.getRedisPort());
+    }
+
+    @Provides
+    HybridPostRepository provideHybridPostRepository()
+    {
+        return new HybridPostRepository(provideMongoTemplate(), provideJedisPool(), config);
+    }
+
 }

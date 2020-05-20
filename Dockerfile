@@ -14,6 +14,6 @@ RUN mvn -f /home/app/pom.xml package -P docker
 # Package stage
 #
 FROM openjdk:8-jre-slim
-COPY --from=build /home/app/target/friendlyneighbor-core.jar /usr/local/lib/fncore.jar
+COPY --from=build /home/app/target/friendlyneighbor-core.jar /home/app/fncore.jar
 EXPOSE 9120
-ENTRYPOINT ["java","-jar","/usr/local/lib/fncore.jar"]
+ENTRYPOINT ["java","-jar","/home/app/fncore.jar"]
