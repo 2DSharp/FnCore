@@ -115,7 +115,6 @@ public class HybridPostRepository implements PostRepository
         try (Jedis jedis = jedisPool.getResource()) {
             String key = getKey(otherUserLocation.getId());
             String toStore = serializeForRedis(post.getId());
-
             try {
                 // Create their feed, since we expect smaller numbers
                 // Expires after 30 days
@@ -152,7 +151,9 @@ public class HybridPostRepository implements PostRepository
     {
         try (Jedis jedis = jedisPool.getResource()) {
             String key = getKey(userLocation.getId());
+
             if (jedis.exists(key)) {
+
                 try {
                     // He's fresh, reset expiry
                     jedis.expire(key, (int) TimeUnit.DAYS.toSeconds(expiryInDays));
@@ -185,7 +186,6 @@ public class HybridPostRepository implements PostRepository
         // Hydrate the feed of the user
         // Attach at the end of the array, thus preserving order
         results.forEach(post -> jedis.rpush(key, post.getId()));
-        System.out.println(results);
         return results;
     }
 
