@@ -8,13 +8,20 @@ It does the heavy lifting for other services with data transfer based on gRPC/Pr
 
 To get started with FnCore you need to obtain a binary of the FnCore build. They are available at
 the [releases](https://github.com/2DSharp/FriendlyNeighborCore/releases) section. You can use the jar
-file to directly run the application with the default configuration. 
-(Custom configuration will be available in future releases)
+file to directly run the application. 
 
-To run, you need to need to have **Java 8 (Not above)** installed.
+To run, you need to need to have **Java 8 (Not above)** installed. 
+It is recommended to customize the `fnconfig.examples.properties` according to your needs and use it in the following way:
 
-```java -jar fncore-0.2.0-rc1.jar```
+If you already have an `fnconfig.properties` file in the directory, run:
 
+```java -jar fncore-0.2.0-rc2.alpha.1.jar```
+
+To use a `properties` file from another directory, add the full path as an argument:
+
+```java -jar fncore-0.2.0-rc2.alpha.1.jar /home/fnconfig.properties```
+
+This will try to read the specified properties file based on availability. If it does fail or has missing values, the server will read from the defaults.
 
 If you'd like to build from source, follow along:
 
