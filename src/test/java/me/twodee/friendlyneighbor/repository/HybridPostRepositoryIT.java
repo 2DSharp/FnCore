@@ -8,6 +8,7 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
+import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import org.assertj.core.api.Assertions;
@@ -37,7 +38,7 @@ class HybridPostRepositoryIT
     private MongoTemplate mongoTemplate;
     private RedisServer redisServer;
     private JedisPool jedisPool;
-    private static final String FEED_NAMESPACE = "FN_CORE.FEED";
+    private static final String FEED_NAMESPACE = "FNCORE.FEED";
 
 
     void startMongo() throws IOException
@@ -256,7 +257,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsInCache_ExpiryExtended()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
