@@ -1,6 +1,7 @@
 package me.twodee.friendlyneighbor.repository;
 
 import me.twodee.friendlyneighbor.entity.UserLocation;
+import me.twodee.friendlyneighbor.exception.DbFailure;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
 
 import java.util.List;
@@ -16,17 +17,19 @@ public interface LocationRepository
 
     /**
      * Look up users who are near a given user who is already registered
+     *
      * @param userId The user looking up nearby users
      * @return A list of users with their distance
      */
-    List<UserLocation> getUsersNearBy(String userId) throws InvalidUser;
+    List<UserLocation> getUsersNearBy(String userId) throws InvalidUser, DbFailure;
 
     /**
      * Look up users who are near a given location
+     *
      * @param userLocation A user location object
      * @return A list of users with their distance
      */
-    List<UserLocation> getUsersNearBy(UserLocation userLocation) throws InvalidUser;
+    List<UserLocation> getUsersNearBy(UserLocation userLocation) throws InvalidUser, DbFailure;
 
     /**
      * Get a single user's location details

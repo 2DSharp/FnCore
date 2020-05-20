@@ -1,8 +1,11 @@
 package me.twodee.friendlyneighbor.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import me.twodee.friendlyneighbor.entity.UserLocation;
+import me.twodee.friendlyneighbor.exception.DbFailure;
 import me.twodee.friendlyneighbor.exception.InvalidUser;
 import org.springframework.data.geo.*;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
@@ -14,9 +17,11 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class MongoLocationRepository implements LocationRepository
 {
     private final MongoTemplate template;
+    private static final int MONGO_INDEX_NOT_FOUND = 27;
 
     @Inject
     public MongoLocationRepository(MongoTemplate template)
@@ -38,7 +43,7 @@ public class MongoLocationRepository implements LocationRepository
     }
 
     @Override
-    public List<UserLocation> getUsersNearBy(String userId) throws InvalidUser
+    public List<UserLocation> getUsersNearBy(String userId) throws InvalidUser, DbFailure
     {
         UserLocation userLocation = template.findById(userId, UserLocation.class);
 
@@ -49,7 +54,7 @@ public class MongoLocationRepository implements LocationRepository
     }
 
     @Override
-    public List<UserLocation> getUsersNearBy(UserLocation userLocation) throws InvalidUser
+    public List<UserLocation> getUsersNearBy(UserLocation userLocation) throws InvalidUser, DbFailure
     {
         if (template.findById(userLocation.getId(), UserLocation.class) == null) {
             throw new InvalidUser("The user id supplied doesn't exist");
@@ -69,17 +74,25 @@ public class MongoLocationRepository implements LocationRepository
         template.remove(Query.query(Criteria.where("id").is(id)), UserLocation.class);
     }
 
-    private List<UserLocation> getUsersInGivenLocation(UserLocation.Position position, double radius, String exclude)
+    private List<UserLocation> getUsersInGivenLocation(UserLocation.Position position, double radius, String exclude) throws DbFailure
     {
-        GeoResults<UserLocation> geoResults = template.query(UserLocation.class)
-                .as(UserLocation.class)
-                .near(createNearQuery(position, radius))
-                .all();
+        try {
 
-        return geoResults.getContent().stream()
-                .filter(result -> filterIneligibleResults(result, exclude))
-                .map(this::setDistanceInGeoResult)
-                .collect(Collectors.toList());
+
+            GeoResults<UserLocation> geoResults = template.query(UserLocation.class)
+                    .as(UserLocation.class)
+                    .near(createNearQuery(position, radius))
+                    .all();
+
+            return geoResults.getContent().stream()
+                    .filter(result -> filterIneligibleResults(result, exclude))
+                    .map(this::setDistanceInGeoResult)
+                    .collect(Collectors.toList());
+        } catch (UncategorizedMongoDbException e) {
+
+            log.error("Severe DB failure, did you drop a collection? ", e);
+            throw new DbFailure(e);
+        }
     }
 
     private boolean filterIneligibleResults(GeoResult<UserLocation> result, String exclude)
@@ -95,11 +108,12 @@ public class MongoLocationRepository implements LocationRepository
         return location;
     }
 
-    private NearQuery createNearQuery(UserLocation.Position position, double radius)
+    private NearQuery createNearQuery(UserLocation.Position position, double radius) throws DbFailure
     {
         Point location = new Point(position.getLongitude(), position.getLatitude());
         Distance distance = new Distance(radius, Metrics.KILOMETERS);
 
         return NearQuery.near(location).maxDistance(distance);
+
     }
 }
