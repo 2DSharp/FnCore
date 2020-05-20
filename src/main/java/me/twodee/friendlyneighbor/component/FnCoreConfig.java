@@ -2,14 +2,14 @@ package me.twodee.friendlyneighbor.component;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Properties;
 
 @Getter
 @Builder
-@Log
+@Slf4j
 public class FnCoreConfig
 {
     private final long feedCacheExpiry;
@@ -23,8 +23,9 @@ public class FnCoreConfig
     // TODO: Add redis password support
     public static FnCoreConfig createFromProperties(Properties properties)
     {
+        Properties defaultProps = new Properties();
+
         try {
-            Properties defaultProps = new Properties();
             defaultProps.load(FnCoreConfig.class.getClassLoader().getResourceAsStream("config.properties"));
 
             return FnCoreConfig.builder()
@@ -45,9 +46,12 @@ public class FnCoreConfig
                     .build();
 
 
+        } catch (NumberFormatException e) {
+            log.warn("Invalid config file! Reading defaults.");
+            return createFromProperties(defaultProps);
         } catch (IOException e) {
-            log.severe("Reading default properties failed. Something went seriously wrong. " +
-                               "Did you remove the configuration.properties before compiling?");
+            log.error("Reading default properties failed. Something went seriously wrong. " +
+                              "Did you remove the configuration.properties before compiling?");
             return null;
         }
 
