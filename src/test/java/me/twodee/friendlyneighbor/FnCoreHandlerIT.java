@@ -390,13 +390,46 @@ class FnCoreHandlerIT
                 .setUserId("abc")
                 .build();
 
-        FnCoreGenerated.Result result = fnCoreHandler.forwardRequestNearbyDefaultLocation(postData);
+        FnCoreGenerated.Result result = fnCoreHandler.forwardRequestNearbyCustomLocation(postData);
         FnCoreGenerated.RequestsNearby requests = fnCoreHandler.fetchRequestsNearby(
                 FnCoreGenerated.UserIdentifier.newBuilder()
                         .setUserId("a")
                         .build());
         assertTrue(result.getSuccess());
         Assertions.assertThat(requests.getRequestsList()).extracting("postId").contains("test");
+    }
+
+    @Test
+    void fanoutWithCustomLocation_NoLocationSet()
+    {
+        registerUsers();
+        FnCoreGenerated.PostData postData = FnCoreGenerated.PostData.newBuilder()
+                .setPostId("test")
+                .setLocation(FnCoreGenerated.Location.newBuilder()
+                                     .setLongitude(73.203)
+                                     .setLatitude(22.878)
+                                     .build())
+                .setUserId("abc")
+                .build();
+
+        FnCoreGenerated.Result result = fnCoreHandler.forwardRequestNearbyCustomLocation(postData);
+        assertFalse(result.getSuccess());
+        assertTrue(result.getErrorsMap().containsKey("location"));
+    }
+
+    @Test
+    void fanoutWithCustomLocation_NoRadiusSet()
+    {
+        registerUsers();
+        FnCoreGenerated.PostData postData = FnCoreGenerated.PostData.newBuilder()
+                .setPostId("test")
+                .setRadius(300)
+                .setUserId("abc")
+                .build();
+
+        FnCoreGenerated.Result result = fnCoreHandler.forwardRequestNearbyCustomLocation(postData);
+        assertFalse(result.getSuccess());
+        assertTrue(result.getErrorsMap().containsKey("location"));
     }
 
     @Test
