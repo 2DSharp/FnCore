@@ -1,5 +1,6 @@
 package me.twodee.friendlyneighbor.repository;
 
+import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import org.assertj.core.api.Assertions;
@@ -40,8 +41,12 @@ class HybridPostRepositoryTest
     {
         Post post = new Post();
         when(template.save(post)).thenReturn(post);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
 
-        HybridPostRepository repository = new HybridPostRepository(template, pool);
+        HybridPostRepository repository = new HybridPostRepository(template, pool, config);
         Post result = repository.save(post);
 
         assertThat(result, equalTo(post));
@@ -50,6 +55,10 @@ class HybridPostRepositoryTest
     @Test
     void successfulForwardToUsersOutOfCache()
     {
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
         Post post = new Post();
         post.setId("a");
         when(pool.getResource()).thenReturn(jedis);
@@ -60,7 +69,7 @@ class HybridPostRepositoryTest
         locationList.add(new UserLocation());
         locationList.add(new UserLocation());
 
-        HybridPostRepository repository = new HybridPostRepository(template, pool);
+        HybridPostRepository repository = new HybridPostRepository(template, pool, config);
         repository.forwardToUsers(locationList, post);
 
         verify(jedis, times(2)).lpush(anyString(), anyString());
@@ -70,6 +79,10 @@ class HybridPostRepositoryTest
     @Test
     void successfulForwardToUsersInCache()
     {
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
         Post post = new Post();
         post.setId("a");
         when(pool.getResource()).thenReturn(jedis);
@@ -80,7 +93,7 @@ class HybridPostRepositoryTest
         locationList.add(new UserLocation());
         locationList.add(new UserLocation());
 
-        HybridPostRepository repository = new HybridPostRepository(template, pool);
+        HybridPostRepository repository = new HybridPostRepository(template, pool, config);
         repository.forwardToUsers(locationList, post);
 
         verify(jedis, times(2)).lpushx(anyString(), anyString());
@@ -90,6 +103,10 @@ class HybridPostRepositoryTest
     @Test
     void successfulForwardToUsersInAndOutOfCache()
     {
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FN_CORE")
+                .feedCacheExpiry(20)
+                .build();
         Post post = new Post();
         post.setId("a");
         when(pool.getResource()).thenReturn(jedis);
@@ -101,7 +118,7 @@ class HybridPostRepositoryTest
         locationList.add(new UserLocation("a", new UserLocation.Position(0, 0), 0));
         locationList.add(new UserLocation("b", new UserLocation.Position(0, 0), 0));
 
-        HybridPostRepository repository = new HybridPostRepository(template, pool);
+        HybridPostRepository repository = new HybridPostRepository(template, pool, config);
         repository.forwardToUsers(locationList, post);
 
         // not in cache
@@ -115,7 +132,11 @@ class HybridPostRepositoryTest
     @Test
     void findAllPostsForUserInCache()
     {
-        HybridPostRepository repository = new HybridPostRepository(template, pool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(template, pool, config);
         when(pool.getResource()).thenReturn(jedis);
         when(jedis.exists(anyString())).thenReturn(true);
         List<String> postIds = new ArrayList<>();
@@ -143,7 +164,11 @@ class HybridPostRepositoryTest
     @Test
     void findAllPostsForUserNotInCache()
     {
-        HybridPostRepository repository = new HybridPostRepository(template, pool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(template, pool, config);
         when(pool.getResource()).thenReturn(jedis);
         when(jedis.exists(anyString())).thenReturn(false);
         List<String> postIds = new ArrayList<>();
@@ -170,7 +195,11 @@ class HybridPostRepositoryTest
     @Test
     void fetchAlsoRetrievesDistance()
     {
-        HybridPostRepository repository = new HybridPostRepository(template, pool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(template, pool, config);
         when(pool.getResource()).thenReturn(jedis);
         when(jedis.exists(anyString())).thenReturn(false);
         List<Post> posts = new ArrayList<>();
