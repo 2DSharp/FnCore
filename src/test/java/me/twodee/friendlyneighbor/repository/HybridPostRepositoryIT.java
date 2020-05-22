@@ -81,7 +81,11 @@ class HybridPostRepositoryIT
     @Test
     void testFanoutOutOfCache()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         nearbyUsers.add(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
         nearbyUsers.add(new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100));
@@ -102,7 +106,11 @@ class HybridPostRepositoryIT
     @Test
     void testFanoutInCache_PostOnTopOfList()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         nearbyUsers.add(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
         nearbyUsers.add(new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100));
@@ -123,7 +131,11 @@ class HybridPostRepositoryIT
     @Test
     void testFanoutInCache_ListHasBeenUpdated()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         nearbyUsers.add(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
         nearbyUsers.add(new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100));
@@ -143,7 +155,11 @@ class HybridPostRepositoryIT
     @Test
     void testFanoutInCache_IndexOccupiedByNonList()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         nearbyUsers.add(new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100));
         nearbyUsers.add(new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100));
@@ -163,7 +179,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsOutOfCache_Order()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
@@ -186,7 +206,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsOutOfCache_DistanceSet()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
@@ -208,7 +232,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsOutOfCache_Rehydrate()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
@@ -233,7 +261,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsOutOfCache_ExcludePosition()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
@@ -285,7 +317,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsInCache_CorrectPostData()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         UserLocation l2 = new UserLocation("xyz", new UserLocation.Position(22.507449, 88.32), 2100);
@@ -311,7 +347,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsInCache_ExcludePosition()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
@@ -340,7 +380,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsInCache_NotAListRehydrated()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
@@ -367,7 +411,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsInCache_NotAListCorrectData()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
@@ -394,7 +442,11 @@ class HybridPostRepositoryIT
     @Test
     void fetchPostsEmpty_ReturnsEmptyListNotNull()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
@@ -413,7 +465,11 @@ class HybridPostRepositoryIT
     @Test
     void testInConsistentCache()
     {
-        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
         List<UserLocation> nearbyUsers = new ArrayList<>();
         UserLocation l1 = new UserLocation("abc123", new UserLocation.Position(22.507449, 88.34), 2100);
         l1.setDistance(20);
