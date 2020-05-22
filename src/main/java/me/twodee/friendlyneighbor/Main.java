@@ -2,6 +2,7 @@ package me.twodee.friendlyneighbor;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import lombok.extern.slf4j.Slf4j;
 import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.configuration.LocationModule;
 
@@ -11,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-
+@Slf4j
 public class Main
 {
     public static void main(String[] args) throws IOException, InterruptedException
@@ -23,6 +24,7 @@ public class Main
             if (Files.exists(path)) {
                 System.out.println(
                         "Found configuration file! Reading from " + path.getFileName().toAbsolutePath().toString());
+                log.info("Found configuration file! Reading from " + path.getFileName().toAbsolutePath().toString());
                 properties.load(Files.newInputStream(path));
             }
         }
@@ -31,12 +33,12 @@ public class Main
             // Does a fnconfig already exist? Load it
             if (Files.exists(path)) {
                 System.out.println("Found configuration file! Reading from " + path.getFileName().toString());
+                log.info("Found configuration file! Reading from " + path.getFileName().toAbsolutePath().toString());
                 properties.load(Files.newInputStream(path));
             }
         }
         // If user didn't specify a file and there's no fnconfig, continue with empty props and read defaults
         FnCoreConfig config = FnCoreConfig.createFromProperties(properties);
-
         assert config != null;
         Injector injector = Guice.createInjector(new LocationModule(config));
         FnCoreHandler service = injector.getInstance(FnCoreHandler.class);

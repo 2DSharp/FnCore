@@ -7,7 +7,34 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-
+    <appender name="FILE-INFO" class="ch.qos.logback.core.FileAppender">
+        <file>${user.home}/fnlogs/fncore.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="FILE-WARN" class="ch.qos.logback.core.FileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${user.home}/fnlogs/fncore.warning.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="FILE-ERR" class="ch.qos.logback.core.FileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${user.home}/fnlogs/fncore.error.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+    </appender>
     <logger name="org.mongodb.driver" level="WARN"/>
     <logger name="io.grpc.netty" level="WARN"/>
     <logger name="org.springframework.data" level="WARN"/>
@@ -15,7 +42,9 @@
     <!-- Strictly speaking, the level attribute is not necessary since -->
     <!-- the level of the root level is set to DEBUG by default.       -->
     <root level="DEBUG">
+        <appender-ref ref="FILE-ERR"/>
+        <appender-ref ref="FILE-WARN"/>
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE-INFO"/>
     </root>
-
 </configuration>

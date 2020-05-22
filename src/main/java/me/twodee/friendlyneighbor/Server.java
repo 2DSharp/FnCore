@@ -30,6 +30,7 @@ public class Server
 
     /** Stop serving requests and shutdown resources. */
     public void stop() throws InterruptedException {
+        logger.info("Server shutting down");
         if (server != null) {
             server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
         }
