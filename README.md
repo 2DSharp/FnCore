@@ -16,11 +16,11 @@ It is recommended to customize the `fnconfig.examples.properties` according to y
 
 If you already have an `fnconfig.properties` file in the directory, run:
 
-```java -jar fncore-0.2.0-rc2.jar```
+```java -jar fncore-0.2.0.jar```
 
 To use a `properties` file from another directory, add the full path as an argument:
 
-```java -jar fncore-0.2.0-rc2.jar /home/fnconfig.properties```
+```java -jar fncore-0.2.0.jar /home/fnconfig.properties```
 
 This will try to read the specified properties file based on availability. If it does fail or has missing values, the server will read from the defaults.
 
@@ -63,7 +63,7 @@ and run `mvn clean package` once again.
 A binary will be generated at `target/`, enter the directory.
 
 * Run the generated binary with:
-```java -jar  fncore-0.2.0-rc2.jar```
+```java -jar  fncore-0.2.0.jar```
 
 ### Building with Docker (For consumers)
 
