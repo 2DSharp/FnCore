@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import lombok.extern.slf4j.Slf4j;
 import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.configuration.LocationModule;
+import me.twodee.friendlyneighbor.configuration.NotifierModule;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,7 +41,7 @@ public class Main
         // If user didn't specify a file and there's no fnconfig, continue with empty props and read defaults
         FnCoreConfig config = FnCoreConfig.createFromProperties(properties);
         assert config != null;
-        Injector injector = Guice.createInjector(new LocationModule(config));
+        Injector injector = Guice.createInjector(new LocationModule(config), new NotifierModule(config));
         FnCoreHandler service = injector.getInstance(FnCoreHandler.class);
         Server server = new Server(config.getFnCorePort(), service);
         server.start();
