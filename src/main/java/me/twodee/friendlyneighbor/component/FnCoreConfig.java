@@ -10,8 +10,7 @@ import java.util.Properties;
 @Getter
 @Builder
 @Slf4j
-public class FnCoreConfig
-{
+public class FnCoreConfig {
     private final long feedCacheExpiry;
     private final String mongoConnectionString;
     private final String mongoDatabase;
@@ -19,10 +18,11 @@ public class FnCoreConfig
     private final String redisHostName;
     private final int redisPort;
     private final int fnCorePort;
+    private final String firebaseServiceKeyFile;
+    private final String firebaseDbUrl;
 
     // TODO: Add redis password support
-    public static FnCoreConfig createFromProperties(Properties properties)
-    {
+    public static FnCoreConfig createFromProperties(Properties properties) {
         Properties defaultProps = new Properties();
 
         try {
@@ -43,6 +43,12 @@ public class FnCoreConfig
                             properties.getProperty("mongo.database", defaultProps.getProperty("mongo.database", "")))
                     .redisKeyspace(properties.getProperty("redis.keyspace",
                                                           defaultProps.getProperty("redis.keyspace", "FNCORE")))
+                    .firebaseDbUrl(
+                            properties.getProperty("firebase.database", defaultProps.getProperty("firebase.database"))
+                    )
+                    .firebaseServiceKeyFile(properties.getProperty("firebase.service.key.file",
+                                                                   defaultProps.getProperty(
+                                                                           "firebase.service.key.file")))
                     .build();
 
 
