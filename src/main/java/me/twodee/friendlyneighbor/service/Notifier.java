@@ -6,7 +6,9 @@ import me.twodee.friendlyneighbor.entity.MessageRecipient;
 import me.twodee.friendlyneighbor.repository.MessagingRepository;
 
 import javax.inject.Inject;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -14,6 +16,11 @@ public class Notifier {
 
     private final FirebaseMessaging messaging;
     private final MessagingRepository repository;
+
+    public enum ResponseType {
+        ACCEPT,
+        RESPOND
+    }
 
     @Inject
     public Notifier(FirebaseMessaging messaging, MessagingRepository repository) {
@@ -46,15 +53,23 @@ public class Notifier {
         }
     }
 
-    public void sendNewResponseNotification(String id, String nameOfRespondingUser) {
+    public void sendNewResponseNotification(String id, String nameOfRespondingUser, ResponseType responseType) {
         try {
             String token = repository.findById(id).getToken();
+            Map<String, String> messageContent = new HashMap<>();
+
+            if (responseType == ResponseType.ACCEPT) {
+                messageContent.put("content", nameOfRespondingUser + " accepted your deal");
+                messageContent.put("title", "Tap to connect with " + nameOfRespondingUser);
+            }
+            else {
+                messageContent.put("content", "Someone wants to make a deal, check it out!");
+                messageContent.put("title", nameOfRespondingUser + " responded to your post!");
+            }
 
             Message message = Message.builder()
                     .putData("type", "response")
-                    .putData("content", "Someone wants to make a deal, check it out!")
-                    .putData("title", nameOfRespondingUser + " responded to your post!")
-
+                    .putAllData(messageContent)
                     .setToken(token)
                     .build();
 

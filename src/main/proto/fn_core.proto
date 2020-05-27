@@ -75,6 +75,11 @@ message NotificationIdentifier {
 message ResponseNotification {
     string userId = 1;
     string nameOfRespondingUser = 2;
+    enum Type {
+        RESPOND = 0;
+        ACCEPT = 1;
+    }
+    Type responseType = 3;
 }
 
 message LocationRadiusResult {

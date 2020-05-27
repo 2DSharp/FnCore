@@ -6,6 +6,7 @@ import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.service.Discovery;
 import me.twodee.friendlyneighbor.service.Feed;
+import me.twodee.friendlyneighbor.service.Notifier;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -147,9 +148,20 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     @Override
     public void notifyForResponse(FnCoreGenerated.ResponseNotification request, StreamObserver<FnCoreGenerated.Result> responseObserver) {
         ResultObject result = feed.sendNotificationForNewResponse(request.getUserId(),
-                                                                  request.getNameOfRespondingUser());
+                                                                  request.getNameOfRespondingUser(),
+                                                                  generateDomainResponseType(request.getResponseType())
+        );
         responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
+    }
+
+    private Notifier.ResponseType generateDomainResponseType(FnCoreGenerated.ResponseNotification.Type type) {
+        switch (type) {
+            case ACCEPT:
+                return Notifier.ResponseType.ACCEPT;
+            default:
+                return Notifier.ResponseType.RESPOND;
+        }
     }
 
     private FnCoreGenerated.LocationRadiusResult buildUserLocationResult(UserLocationResult result) {
