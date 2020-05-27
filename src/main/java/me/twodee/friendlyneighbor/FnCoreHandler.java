@@ -131,15 +131,27 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
     }
 
     @Override
-    public void deleteRequest(FnCoreGenerated.PostData request, StreamObserver<FnCoreGenerated.Result> responseObserver)
-    {
+    public void deleteRequest(FnCoreGenerated.PostData request, StreamObserver<FnCoreGenerated.Result> responseObserver) {
         ResultObject result = feed.delete(request.getPostId());
         responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
     }
 
-    private FnCoreGenerated.LocationRadiusResult buildUserLocationResult(UserLocationResult result)
-    {
+    @Override
+    public void saveUserForNotifications(FnCoreGenerated.NotificationIdentifier request, StreamObserver<FnCoreGenerated.Result> responseObserver) {
+        ResultObject result = feed.saveNotificationRecipient(request.getUserId(), request.getNotifyToken());
+        responseObserver.onNext(buildResult(result));
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void notifyForResponse(FnCoreGenerated.ResponseNotification request, StreamObserver<FnCoreGenerated.Result> responseObserver) {
+        ResultObject result = feed.sendNotificationForNewResponse(request.getUserId());
+        responseObserver.onNext(buildResult(result));
+        responseObserver.onCompleted();
+    }
+
+    private FnCoreGenerated.LocationRadiusResult buildUserLocationResult(UserLocationResult result) {
         if (result.getNotification().hasErrors()) {
             return FnCoreGenerated.LocationRadiusResult.newBuilder()
                     .setMetaResult(buildMetaResult(result.getNotification().getErrors()))
