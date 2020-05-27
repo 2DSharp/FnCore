@@ -83,8 +83,8 @@ public class Feed {
         return new SuccessResult();
     }
 
-    public ResultObject sendNotificationForNewResponse(String id) {
-        notifier.sendNewResponseNotification(id);
+    public ResultObject sendNotificationForNewResponse(String id, String nameOfRespondingUser) {
+        notifier.sendNewResponseNotification(id, nameOfRespondingUser);
         return new SuccessResult();
     }
 

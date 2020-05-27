@@ -146,7 +146,8 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
 
     @Override
     public void notifyForResponse(FnCoreGenerated.ResponseNotification request, StreamObserver<FnCoreGenerated.Result> responseObserver) {
-        ResultObject result = feed.sendNotificationForNewResponse(request.getUserId());
+        ResultObject result = feed.sendNotificationForNewResponse(request.getUserId(),
+                                                                  request.getNameOfRespondingUser());
         responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
     }

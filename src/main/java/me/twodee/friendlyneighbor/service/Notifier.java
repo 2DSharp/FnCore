@@ -34,11 +34,9 @@ public class Notifier {
 
             MulticastMessage message = MulticastMessage.builder()
                     .putData("type", "discover")
-                    .setNotification(Notification.builder()
-                                             .setBody(
-                                                     "There are similar items to your recent search people are looking for, want to have a look?")
-                                             .setTitle("Someone just posted a post may fulfil your requirements.")
-                                             .build())
+                    .putData("title", "Someone just posted a post may fulfil your requirements.")
+                    .putData("content",
+                             "There are similar items to your recent search people are looking for, want to have a look?")
                     .addAllTokens(tokens)
                     .build();
             BatchResponse response = messaging.sendMulticast(message);
@@ -48,16 +46,15 @@ public class Notifier {
         }
     }
 
-    public void sendNewResponseNotification(String id) {
+    public void sendNewResponseNotification(String id, String nameOfRespondingUser) {
         try {
             String token = repository.findById(id).getToken();
 
             Message message = Message.builder()
                     .putData("type", "response")
-                    .setNotification(Notification.builder()
-                                             .setBody("Someone found your post fulfiling their needs, have a look!")
-                                             .setTitle("Someone responded to your post!")
-                                             .build())
+                    .putData("content", "Someone wants to make a deal, check it out!")
+                    .putData("title", nameOfRespondingUser + " responded to your post!")
+
                     .setToken(token)
                     .build();
 
