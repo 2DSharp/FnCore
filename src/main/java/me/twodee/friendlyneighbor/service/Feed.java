@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Log
 public class Feed {
@@ -77,6 +78,16 @@ public class Feed {
                                                          usersNearby.getUserLocations()));
     }
 
+    public ResultObject saveNotificationRecipient(String id, String token) {
+        notifier.saveToNotification(id, token);
+        return new SuccessResult();
+    }
+
+    public ResultObject sendNotificationForNewResponse(String id) {
+        notifier.sendNewResponseNotification(id);
+        return new SuccessResult();
+    }
+
     private ResultObject saveAndPush(UserLocation currentUserLocation, Post post) {
         Post persistedPost = repository.save(post);
         UserLocationsResult usersNearby = discovery.lookupNearbyUsersByLocation(currentUserLocation);
@@ -107,7 +118,7 @@ public class Feed {
 
     private void notifyUsersWithSimilarPosts(List<UserLocation> usersNearby, Post post) {
         List<Post> posts = repository.fetchMatchingNearbyPosts(post.getLocation(), usersNearby, post);
-        notifier.sendAll();
+        notifier.sendPostRecommendation(posts.stream().map(p -> p.getLocation().getId()).collect(Collectors.toList()));
     }
 
     public ResultObject delete(String postId) {
