@@ -6,8 +6,8 @@ import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.index.TextIndexDefinition;
+import org.springframework.data.mongodb.core.query.*;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisDataException;
@@ -48,23 +48,29 @@ public class HybridPostRepository implements PostRepository
     }
 
     @Inject
-    public HybridPostRepository(MongoTemplate mongoTemplate, JedisPool jedisPool, FnCoreConfig config)
-    {
+    public HybridPostRepository(MongoTemplate mongoTemplate, JedisPool jedisPool, FnCoreConfig config) {
         this.mongoTemplate = mongoTemplate;
         this.jedisPool = jedisPool;
         expiryInDays = config.getFeedCacheExpiry();
         feedNamespace = config.getRedisKeyspace() + "." + FEED_KEYSPACE;
+        //initIndexes();
+    }
+
+    private void initIndexes() {
+        TextIndexDefinition textIndex = new TextIndexDefinition.TextIndexDefinitionBuilder()
+                .onField("title", 2F)
+                .build();
+        mongoTemplate.indexOps(Post.class)
+                .ensureIndex(textIndex);
     }
 
     @Override
-    public Post save(Post post)
-    {
+    public Post save(Post post) {
         return mongoTemplate.save(post);
     }
 
     @Override
-    public void forwardToUsers(List<UserLocation> userLocations, Post post)
-    {
+    public void forwardToUsers(List<UserLocation> userLocations, Post post) {
         userLocations.parallelStream()
                 .forEach(location -> fanout(location, post));
     }
@@ -171,14 +177,22 @@ public class HybridPostRepository implements PostRepository
         }
     }
 
-    private List<Post> processPostDistances(List<Post> posts, UserLocation currentUserLocation)
-    {
+    @Override
+    public List<Post> fetchMatchingNearbyPosts(UserLocation currentUserLocation,
+                                               List<UserLocation> nearbyUsers,
+                                               Post post) {
+        List<String> ids = nearbyUsers.stream()
+                .map(UserLocation::getId)
+                .collect(Collectors.toList());
+        return fetchPostsByLocationIdsAndCloseness(ids, post.getType(), post.getTitle());
+    }
+
+    private List<Post> processPostDistances(List<Post> posts, UserLocation currentUserLocation) {
         posts.forEach(post -> updateDistanceAndPosition(currentUserLocation, post));
         return posts;
     }
 
-    private List<Post> fetchAndRehydrate(String key, List<UserLocation> nearbyUsers, Jedis jedis)
-    {
+    private List<Post> fetchAndRehydrate(String key, List<UserLocation> nearbyUsers, Jedis jedis) {
         List<String> ids = nearbyUsers.stream()
                 .map(UserLocation::getId)
                 .collect(Collectors.toList());
@@ -212,11 +226,21 @@ public class HybridPostRepository implements PostRepository
         return mongoTemplate.find(query, Post.class);
     }
 
-    private List<Post> fetchPostsByLocationIds(List<String> locations)
-    {
+    private List<Post> fetchPostsByLocationIds(List<String> locations) {
         Query query = Query.query(Criteria.where("location.id").in(locations)).with(
                 Sort.by(Sort.Direction.DESC, "time"));
 
+        return mongoTemplate.find(query, Post.class);
+    }
+
+    private List<Post> fetchPostsByLocationIdsAndCloseness(List<String> locations, Post.PostType type, String text) {
+        Term term = new Term(text);
+
+        TextQuery query = TextQuery.queryText(new TextCriteria().matching(term).diacriticSensitive(false)).includeScore(
+                "score").sortByScore();
+        query.addCriteria(Criteria.where("location.id").in(locations).and("type").nin(type)).with(
+                Sort.by(Sort.Direction.DESC, "time"));
+        System.out.println(query.toString());
         return mongoTemplate.find(query, Post.class);
     }
 }

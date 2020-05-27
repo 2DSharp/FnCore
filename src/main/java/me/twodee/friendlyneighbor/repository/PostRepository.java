@@ -5,13 +5,14 @@ import me.twodee.friendlyneighbor.entity.UserLocation;
 
 import java.util.List;
 
-public interface PostRepository
-{
+public interface PostRepository {
     Post save(Post post);
 
     void forwardToUsers(List<UserLocation> userLocations, Post post);
 
     List<Post> findAllForUser(UserLocation currentUserLocation, List<UserLocation> nearbyUsers);
+
+    List<Post> fetchMatchingNearbyPosts(UserLocation currentUserLocation, List<UserLocation> nearbyUsers, Post post);
 
     void deleteById(String id);
 }

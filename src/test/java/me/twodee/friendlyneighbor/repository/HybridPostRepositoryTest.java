@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.IndexOperations;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -20,19 +21,19 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.*;
 
-class HybridPostRepositoryTest
-{
+class HybridPostRepositoryTest {
     @Mock
     MongoTemplate template;
     @Mock
     JedisPool pool;
+    @Mock
+    IndexOperations indexOperations;
 
     @Mock
     Jedis jedis;
 
     @BeforeEach
-    void setUp()
-    {
+    void setUp() {
         MockitoAnnotations.initMocks(this);
     }
 
@@ -215,5 +216,31 @@ class HybridPostRepositoryTest
                 new UserLocation("test", new UserLocation.Position(22.507449, 88.34), 2100), locationList);
 
         Assertions.assertThat(result).extracting("location").extracting("distance").isNotNull();
+    }
+
+    @Test
+    void lookupNearbyMatchingPostsSuccessful() {
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        when(pool.getResource()).thenReturn(jedis);
+        when(jedis.exists(anyString())).thenReturn(false);
+        List<Post> posts = new ArrayList<>();
+        posts.add(new Post("a", new UserLocation("x", new UserLocation.Position(0, 0), 0), LocalDateTime.now()));
+
+        when(template.find(any(), any(Class.class))).thenReturn(posts);
+        HybridPostRepository repository = new HybridPostRepository(template, pool, config);
+
+        List<UserLocation> locationList = new ArrayList<>();
+
+        locationList.add(new UserLocation("x", new UserLocation.Position(0, 0), 0));
+
+        List<Post> res = repository.fetchMatchingNearbyPosts(
+                new UserLocation("test", new UserLocation.Position(22.507449, 88.34), 2100),
+                locationList,
+                new Post("a", new UserLocation("x", new UserLocation.Position(0, 0), 0), LocalDateTime.now(),
+                         Post.PostType.OFFERING, "Hello world"));
+        assertThat(res.size(), equalTo(1));
     }
 }
