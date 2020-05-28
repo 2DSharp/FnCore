@@ -589,6 +589,124 @@ class HybridPostRepositoryIT
                 .doesNotContain("p2");
     }
 
+    @Test
+    void testFetch_customLocation() {
+        // 2 km
+        mongoTemplate.save(new Post("p1", new UserLocation("x", new UserLocation.Position(22.62418527201904,
+                                                                                          88.41448556631804), 10),
+                                    LocalDateTime.now(), Post.PostType.REQUEST, "Apple watch"));
+        // 10 km
+        mongoTemplate.save(
+                new Post("p2", new UserLocation("y", new UserLocation.Position(22.74, 88.42), 10), LocalDateTime.now(),
+                         Post.PostType.OFFERING, "Samsung"));
+        // should be ignored
+        mongoTemplate.save(
+                new Post("p3", new UserLocation("z", new UserLocation.Position(22.64, 88.42), 10), LocalDateTime.now(),
+                         Post.PostType.REQUEST, "Screwdriver"));
+
+        UserLocation currentUser = new UserLocation("z", new UserLocation.Position(22.643, 88.41), 10);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
+
+        List<Post> feed = repository.findAllForUser(currentUser);
+        feed.forEach(System.out::println);
+        assertThat(feed.size(), equalTo(1));
+        Assertions.assertThat(feed).extracting("id")
+                .doesNotContain("p2");
+        Assertions.assertThat(feed).extracting("id")
+                .doesNotContain("p3");
+    }
+
+    @Test
+    void testFetch_customLocation_DoesntIncludeOutOfRadiusSelfPreference() {
+        // 2 km
+        mongoTemplate.save(new Post("p1", new UserLocation("x", new UserLocation.Position(22.62418527201904,
+                                                                                          88.41448556631804), 10),
+                                    LocalDateTime.now(), Post.PostType.REQUEST, "Apple watch"));
+        // 10 km
+        mongoTemplate.save(
+                new Post("p2", new UserLocation("y", new UserLocation.Position(22.74, 88.42), 10), LocalDateTime.now(),
+                         Post.PostType.OFFERING, "Samsung"));
+        // should be ignored
+        mongoTemplate.save(
+                new Post("p3", new UserLocation("z", new UserLocation.Position(22.64, 88.42), 10), LocalDateTime.now(),
+                         Post.PostType.REQUEST, "Screwdriver"));
+
+        UserLocation currentUser = new UserLocation("z", new UserLocation.Position(22.643, 88.41), 6);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
+
+        List<Post> feed = repository.findAllForUser(currentUser);
+        feed.forEach(System.out::println);
+        Assertions.assertThat(feed).extracting("id")
+                .doesNotContain("p2");
+    }
+
+    @Test
+    void testFetch_customLocation_DoesntIncludeOutOfRadiusOtherPreference() {
+        // 2 km
+        mongoTemplate.save(new Post("p1", new UserLocation("x", new UserLocation.Position(22.62418527201904,
+                                                                                          88.41448556631804), 10),
+                                    LocalDateTime.now(), Post.PostType.REQUEST, "Apple watch"));
+        // 10 km
+        mongoTemplate.save(
+                new Post("p2", new UserLocation("y", new UserLocation.Position(22.74, 88.42), 10), LocalDateTime.now(),
+                         Post.PostType.OFFERING, "Samsung"));
+        // should be ignored
+        mongoTemplate.save(
+                new Post("p3", new UserLocation("z", new UserLocation.Position(22.64, 88.42), 4), LocalDateTime.now(),
+                         Post.PostType.REQUEST, "Screwdriver"));
+
+        UserLocation currentUser = new UserLocation("z", new UserLocation.Position(22.643, 88.41), 10);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
+
+        List<Post> feed = repository.findAllForUser(currentUser);
+        feed.forEach(System.out::println);
+        Assertions.assertThat(feed).extracting("id")
+                .doesNotContain("p2");
+    }
+
+    @Test
+    void testFetch_customLocation_DoesntIncludeSelf() {
+        // 2 km
+        mongoTemplate.save(new Post("p1", new UserLocation("x", new UserLocation.Position(22.62418527201904,
+                                                                                          88.41448556631804), 10),
+                                    LocalDateTime.now(), Post.PostType.REQUEST, "Apple watch"));
+        // 10 km
+        mongoTemplate.save(
+                new Post("p2", new UserLocation("y", new UserLocation.Position(22.74, 88.42), 10), LocalDateTime.now(),
+                         Post.PostType.OFFERING, "Samsung"));
+        // should be ignored
+        mongoTemplate.save(
+                new Post("p3", new UserLocation("z", new UserLocation.Position(22.64, 88.42), 4), LocalDateTime.now(),
+                         Post.PostType.REQUEST, "Screwdriver"));
+        mongoTemplate.save(
+                new Post("p4", new UserLocation("z", new UserLocation.Position(22.64, 88.42), 4), LocalDateTime.now(),
+                         Post.PostType.REQUEST, "Screwdriver"));
+
+        UserLocation currentUser = new UserLocation("z", new UserLocation.Position(22.643, 88.41), 10);
+        FnCoreConfig config = FnCoreConfig.builder()
+                .redisKeyspace("FNCORE")
+                .feedCacheExpiry(20)
+                .build();
+        HybridPostRepository repository = new HybridPostRepository(mongoTemplate, jedisPool, config);
+
+        List<Post> feed = repository.findAllForUser(currentUser);
+        feed.forEach(System.out::println);
+        Assertions.assertThat(feed).extracting("id")
+                .doesNotContain("p3", "p4");
+    }
+
     private String getKey(String id) {
         return FEED_NAMESPACE + ":" + id;
     }

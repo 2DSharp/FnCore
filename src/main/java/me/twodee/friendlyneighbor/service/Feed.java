@@ -67,15 +67,14 @@ public class Feed {
 
     public PostResults fetchRequestsForUser(String userId)
     {
-        UserLocationsResult usersNearby = discovery.lookupNearbyUsersByUserId(userId);
-        if (usersNearby.getNotification().hasErrors()) {
+        UserLocationResult locationResult = discovery.getUserLocation(userId);
+        if (locationResult.getNotification().hasErrors()) {
             PostResults results = new PostResults();
-            results.setNotification(usersNearby.getNotification());
+            results.setNotification(locationResult.getNotification());
             return results;
         }
 
-        return new PostResults(repository.findAllForUser(discovery.getUserLocation(userId).userLocation,
-                                                         usersNearby.getUserLocations()));
+        return new PostResults(repository.findAllForUser(locationResult.userLocation));
     }
 
     public ResultObject saveNotificationRecipient(String id, String token) {

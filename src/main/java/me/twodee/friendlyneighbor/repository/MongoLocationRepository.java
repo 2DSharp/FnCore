@@ -77,8 +77,6 @@ public class MongoLocationRepository implements LocationRepository
     private List<UserLocation> getUsersInGivenLocation(UserLocation.Position position, double radius, String exclude) throws DbFailure
     {
         try {
-
-
             GeoResults<UserLocation> geoResults = template.query(UserLocation.class)
                     .as(UserLocation.class)
                     .near(createNearQuery(position, radius))

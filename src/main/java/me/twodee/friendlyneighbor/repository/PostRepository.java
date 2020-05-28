@@ -10,7 +10,15 @@ public interface PostRepository {
 
     void forwardToUsers(List<UserLocation> userLocations, Post post);
 
+    /**
+     * @param currentUserLocation
+     * @param nearbyUsers
+     * @return
+     * @deprecated
+     */
     List<Post> findAllForUser(UserLocation currentUserLocation, List<UserLocation> nearbyUsers);
+
+    List<Post> findAllForUser(UserLocation currentUserLocation);
 
     List<Post> fetchMatchingNearbyPosts(UserLocation currentUserLocation, List<UserLocation> nearbyUsers, Post post);
 

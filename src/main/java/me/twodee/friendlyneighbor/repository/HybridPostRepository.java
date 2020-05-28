@@ -5,6 +5,7 @@ import me.twodee.friendlyneighbor.component.FnCoreConfig;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.geo.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition;
 import org.springframework.data.mongodb.core.query.*;
@@ -175,6 +176,37 @@ public class HybridPostRepository implements PostRepository
                 return processPostDistances(fetchAndRehydrate(key, nearbyUsers, jedis), userLocation);
             }
         }
+    }
+
+    @Override
+    public List<Post> findAllForUser(UserLocation currentUserLocation) {
+        GeoResults<Post> geoResults = mongoTemplate.query(Post.class)
+                .as(Post.class)
+                .near(createNearQuery(currentUserLocation.getPosition(), currentUserLocation.getRadius()))
+                .all();
+        return geoResults.getContent().stream()
+                .filter(result -> filterIneligibleResults(result, currentUserLocation.getId()))
+                .map(this::setDistanceInGeoResult)
+                .collect(Collectors.toList());
+    }
+
+    private boolean filterIneligibleResults(GeoResult<Post> result, String exclude) {
+        return (result.getDistance().in(Metrics.KILOMETERS).getValue() <= result.getContent().getLocation().getRadius())
+                && (!result.getContent().getLocation().getId().equals(exclude));
+    }
+
+    private Post setDistanceInGeoResult(GeoResult<Post> locationGeoResult) {
+        Post post = locationGeoResult.getContent();
+        post.getLocation().setDistance(locationGeoResult.getDistance().in(Metrics.KILOMETERS).getValue());
+        return post;
+    }
+
+    private NearQuery createNearQuery(UserLocation.Position position, double radius) {
+        Point location = new Point(position.getLongitude(), position.getLatitude());
+        Distance distance = new Distance(radius, Metrics.KILOMETERS);
+
+        return NearQuery.near(location).maxDistance(distance);
+
     }
 
     @Override

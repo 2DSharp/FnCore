@@ -2,6 +2,8 @@ package me.twodee.friendlyneighbor.entity;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 
@@ -9,12 +11,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Setter
 @NoArgsConstructor
 @Document(collection = "location")
-@ToString
 public class UserLocation
 {
     @Setter
     @Getter
     @AllArgsConstructor
+    @ToString
     public static class Position
     {
         private double latitude;
@@ -23,6 +25,7 @@ public class UserLocation
 
     @Id
     private String id;
+    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private double[] position;
     private Number distance;
     private double radius;
