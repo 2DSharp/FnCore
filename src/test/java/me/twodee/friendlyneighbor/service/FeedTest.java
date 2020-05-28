@@ -4,12 +4,15 @@ import me.twodee.friendlyneighbor.dto.*;
 import me.twodee.friendlyneighbor.entity.Post;
 import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.repository.PostRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -145,7 +148,7 @@ class FeedTest
     {
         Feed feed = new Feed(discovery, repository);
         when(discovery.lookupNearbyUsersByUserId(any())).thenReturn(new UserLocationsResult(new ArrayList<>()));
-        when(repository.findAllForUser(any(), any())).thenReturn(new ArrayList<>());
+        when(repository.findAllForUser(any())).thenReturn(new ArrayList<>());
         when(discovery.getUserLocation(any())).thenReturn(new UserLocationResult(new UserLocation()));
         PostResults results = feed.fetchRequestsForUser("uid");
 
@@ -154,12 +157,13 @@ class FeedTest
     }
 
     @Test
-    void fetchRequestsInvalidId()
-    {
+    void fetchRequestsInvalidId() {
         Feed feed = new Feed(discovery, repository);
         Notification note = new Notification();
         note.addError("a", "b");
-        when(discovery.lookupNearbyUsersByUserId(any())).thenReturn(new UserLocationsResult(note));
+        UserLocationResult result = new UserLocationResult();
+        result.setNotification(note);
+        when(discovery.getUserLocation(any())).thenReturn(result);
         PostResults results = feed.fetchRequestsForUser("uid");
 
         assertTrue(results.getNotification().hasErrors());
@@ -168,8 +172,7 @@ class FeedTest
     }
 
     @Test
-    void fetchRequestsEmptyFeed()
-    {
+    void fetchRequestsEmptyFeed() {
         Feed feed = new Feed(discovery, repository);
         when(discovery.lookupNearbyUsersByUserId(any())).thenReturn(new UserLocationsResult(new ArrayList<>()));
         when(discovery.getUserLocation(any())).thenReturn(new UserLocationResult(new UserLocation()));
@@ -177,5 +180,19 @@ class FeedTest
 
         assertFalse(results.getNotification().hasErrors());
         assertTrue(results.getPosts().isEmpty());
+    }
+
+    @Test
+    void fetchRequests_SenderHomeFarButPostingCloseToReceiver() {
+        Feed feed = new Feed(discovery, repository);
+        UserLocationResult locationResult = new UserLocationResult(
+                new UserLocation("uid", new UserLocation.Position(12, 12), 10));
+        when(discovery.getUserLocation(any())).thenReturn(locationResult);
+        List<Post> posts = new ArrayList<>();
+        posts.add(new Post("p1", null, LocalDateTime.now()));
+        when(repository.findAllForUser(any())).thenReturn(posts);
+        PostResults results = feed.fetchRequestsForUser("uid");
+
+        Assertions.assertThat(results.getPosts()).extracting("id").containsExactly("p1");
     }
 }

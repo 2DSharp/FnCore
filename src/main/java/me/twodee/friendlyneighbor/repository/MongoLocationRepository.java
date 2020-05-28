@@ -7,8 +7,6 @@ import me.twodee.friendlyneighbor.exception.InvalidUser;
 import org.springframework.data.geo.*;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
-import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -27,13 +25,6 @@ public class MongoLocationRepository implements LocationRepository
     public MongoLocationRepository(MongoTemplate template)
     {
         this.template = template;
-        initTemplate();
-    }
-
-    private void initTemplate()
-    {
-        template.indexOps(UserLocation.class).ensureIndex(
-                new GeospatialIndex("position").typed(GeoSpatialIndexType.GEO_2DSPHERE));
     }
 
     @Override
@@ -77,8 +68,6 @@ public class MongoLocationRepository implements LocationRepository
     private List<UserLocation> getUsersInGivenLocation(UserLocation.Position position, double radius, String exclude) throws DbFailure
     {
         try {
-
-
             GeoResults<UserLocation> geoResults = template.query(UserLocation.class)
                     .as(UserLocation.class)
                     .near(createNearQuery(position, radius))

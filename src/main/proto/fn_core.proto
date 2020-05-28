@@ -23,6 +23,14 @@ service FnCore {
     rpc DeleteUserLocation (UserIdentifier) returns (Result) {
     }
 
+    /* Registers the already existing user for notifications */
+    rpc SaveUserForNotifications (NotificationIdentifier) returns (Result) {
+    }
+
+    /* Notifies a user if there's a new response */
+    rpc NotifyForResponse (ResponseNotification) returns (Result) {
+    }
+
     /* Fetch a user's default location */
     rpc GetUserLocation (UserIdentifier) returns (LocationRadiusResult) {
     }
@@ -59,6 +67,21 @@ service FnCore {
     }
 }
 
+message NotificationIdentifier {
+    string userId = 1;
+    string notifyToken = 2;
+}
+
+message ResponseNotification {
+    string userId = 1;
+    string nameOfRespondingUser = 2;
+    enum Type {
+        RESPOND = 0;
+        ACCEPT = 1;
+    }
+    Type responseType = 3;
+}
+
 message LocationRadiusResult {
     Location location = 1;
     double radius = 2;
@@ -70,6 +93,12 @@ message PostData {
     Location location = 2; // optional for forwardBy ForwardRequestNearbyDefaultLocation
     double radius = 3; // optional for forwardBy ForwardRequestNearbyDefaultLocation
     string postId = 4;
+    enum Type {
+        REQUEST = 0;
+        OFFERING = 1;
+    }
+    Type type = 5;
+    string title = 6;
 }
 
 message RequestsNearby {
