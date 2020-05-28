@@ -2,6 +2,8 @@ package me.twodee.friendlyneighbor.service;
 
 import com.google.firebase.messaging.*;
 import lombok.extern.slf4j.Slf4j;
+import me.twodee.friendlyneighbor.dto.ResultObject;
+import me.twodee.friendlyneighbor.dto.SuccessResult;
 import me.twodee.friendlyneighbor.entity.MessageRecipient;
 import me.twodee.friendlyneighbor.repository.MessagingRepository;
 
@@ -28,12 +30,13 @@ public class Notifier {
         this.repository = repository;
     }
 
-    public void saveToNotification(String userId, String token) {
+    public ResultObject saveToNotification(String userId, String token) {
         MessageRecipient messageRecipient = new MessageRecipient(userId, token);
         repository.save(messageRecipient);
+        return new SuccessResult();
     }
 
-    public void sendPostRecommendation(List<String> ids) {
+    public ResultObject sendPostRecommendation(List<String> ids) {
         try {
 
             List<MessageRecipient> recipients = repository.findTokensByIds(ids);
@@ -48,16 +51,18 @@ public class Notifier {
                     .build();
             BatchResponse response = messaging.sendMulticast(message);
             log.info(response.getSuccessCount() + " messages were sent successfully");
+            return new SuccessResult();
+
         } catch (FirebaseMessagingException e) {
             log.error("Error sending notif", e);
+            return new ResultObject("internal", "Error sending notification, try again");
         }
     }
 
-    public void sendNewResponseNotification(String id, String nameOfRespondingUser, ResponseType responseType) {
+    public ResultObject sendNewResponseNotification(String id, String nameOfRespondingUser, ResponseType responseType) {
         try {
             String token = repository.findById(id).getToken();
             Map<String, String> messageContent = new HashMap<>();
-
             if (responseType == ResponseType.ACCEPT) {
                 messageContent.put("content", nameOfRespondingUser + " accepted your deal");
                 messageContent.put("title", "Tap to connect with " + nameOfRespondingUser);
@@ -75,9 +80,10 @@ public class Notifier {
 
             String response = FirebaseMessaging.getInstance().send(message);
             log.info("Notification sent to " + id + ". Response: " + response);
+            return new SuccessResult();
         } catch (FirebaseMessagingException e) {
             log.error("Error sending notif", e);
-
+            return new ResultObject("internal", "Error sending notification, try again");
         }
     }
 

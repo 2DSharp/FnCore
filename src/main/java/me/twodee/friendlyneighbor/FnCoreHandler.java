@@ -13,20 +13,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
-{
+public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase {
     private final Discovery discovery;
     private final Feed feed;
-    @Inject
-    FnCoreHandler(Discovery discovery, Feed feed)
-    {
+    private Notifier notifier;
+
+    /**
+     * @param discovery
+     * @param feed
+     * @deprecated
+     */
+    FnCoreHandler(Discovery discovery, Feed feed) {
         this.discovery = discovery;
         this.feed = feed;
     }
 
+    @Inject
+    FnCoreHandler(Discovery discovery, Feed feed, Notifier notifier) {
+        this.discovery = discovery;
+        this.feed = feed;
+        this.notifier = notifier;
+    }
+
     @Override
-    public void saveUserLocation(FnCoreGenerated.RegistrationRequest request, StreamObserver<FnCoreGenerated.Result> responseObserver)
-    {
+    public void saveUserLocation(FnCoreGenerated.RegistrationRequest request, StreamObserver<FnCoreGenerated.Result> responseObserver) {
         ResultObject result = discovery.saveUserLocation(buildSearchLocation(request));
         responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
@@ -140,16 +150,18 @@ public class FnCoreHandler extends FnCoreGrpc.FnCoreImplBase
 
     @Override
     public void saveUserForNotifications(FnCoreGenerated.NotificationIdentifier request, StreamObserver<FnCoreGenerated.Result> responseObserver) {
-        ResultObject result = feed.saveNotificationRecipient(request.getUserId(), request.getNotifyToken());
+        ResultObject result = notifier.saveToNotification(request.getUserId(), request.getNotifyToken());
         responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
     }
 
     @Override
     public void notifyForResponse(FnCoreGenerated.ResponseNotification request, StreamObserver<FnCoreGenerated.Result> responseObserver) {
-        ResultObject result = feed.sendNotificationForNewResponse(request.getUserId(),
-                                                                  request.getNameOfRespondingUser(),
-                                                                  generateDomainResponseType(request.getResponseType())
+        System.out.println(request.getResponseType().getNumber());
+
+        ResultObject result = notifier.sendNewResponseNotification(request.getUserId(),
+                                                                   request.getNameOfRespondingUser(),
+                                                                   generateDomainResponseType(request.getResponseType())
         );
         responseObserver.onNext(buildResult(result));
         responseObserver.onCompleted();
