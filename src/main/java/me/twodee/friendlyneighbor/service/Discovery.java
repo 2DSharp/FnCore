@@ -83,7 +83,7 @@ public class Discovery
 
     private ResultObject somethingWentWrong(Throwable e)
     {
-        log.severe(Arrays.toString(e.getStackTrace()));
+        log.severe("Something went wrong: " + e.getMessage() + "\n" + e);
         return new ResultObject("internal", ResultObject.SOMETHING_WENT_WRONG);
     }
 
