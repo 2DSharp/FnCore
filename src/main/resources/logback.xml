@@ -4,13 +4,13 @@
         <!-- encoders are assigned the type
              ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE-INFO" class="ch.qos.logback.core.FileAppender">
         <file>${user.home}/fnlogs/fncore.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS}  [%thread] %-5level %logger - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE-WARN" class="ch.qos.logback.core.FileAppender">
@@ -21,7 +21,7 @@
         </filter>
         <file>${user.home}/fnlogs/fncore.warning.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS}  [%thread] %-5level %logger - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE-ERR" class="ch.qos.logback.core.FileAppender">
@@ -32,7 +32,7 @@
         </filter>
         <file>${user.home}/fnlogs/fncore.error.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS}  [%thread] %-5level %logger - %msg%n</pattern>
         </encoder>
     </appender>
     <logger name="org.mongodb.driver" level="WARN"/>
