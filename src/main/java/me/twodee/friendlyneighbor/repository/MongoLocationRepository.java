@@ -7,6 +7,7 @@ import me.twodee.friendlyneighbor.exception.InvalidUser;
 import org.springframework.data.geo.*;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -30,6 +31,7 @@ public class MongoLocationRepository implements LocationRepository
     @Override
     public UserLocation save(UserLocation userLocation)
     {
+        template.indexOps(UserLocation.class).ensureIndex(new GeospatialIndex("position"));
         return template.save(userLocation);
     }
 

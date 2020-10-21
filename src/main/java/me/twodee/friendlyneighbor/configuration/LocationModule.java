@@ -6,11 +6,14 @@ import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClients;
 import lombok.extern.slf4j.Slf4j;
 import me.twodee.friendlyneighbor.component.FnCoreConfig;
+import me.twodee.friendlyneighbor.entity.Post;
+import me.twodee.friendlyneighbor.entity.UserLocation;
 import me.twodee.friendlyneighbor.repository.HybridPostRepository;
 import me.twodee.friendlyneighbor.repository.LocationRepository;
 import me.twodee.friendlyneighbor.repository.MongoLocationRepository;
 import me.twodee.friendlyneighbor.repository.PostRepository;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -42,6 +45,11 @@ public class LocationModule extends AbstractModule
                     config.getMongoConnectionString()
             )), config.getMongoDatabase());
             log.info("Connected to mongo server.");
+            log.info("Creating indexes");
+            mongoTemplate.indexOps(UserLocation.class).ensureIndex(new GeospatialIndex("position"));
+            mongoTemplate.indexOps(Post.class).ensureIndex(new GeospatialIndex("location.position"));
+            HybridPostRepository.initTextIndex(mongoTemplate);
+            log.info("Created indexes");
             return mongoTemplate;
         } catch (Exception e) {
             log.error("Mongo connection failed!", e);

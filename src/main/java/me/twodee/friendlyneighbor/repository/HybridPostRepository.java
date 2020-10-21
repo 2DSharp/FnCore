@@ -54,14 +54,14 @@ public class HybridPostRepository implements PostRepository
         this.jedisPool = jedisPool;
         expiryInDays = config.getFeedCacheExpiry();
         feedNamespace = config.getRedisKeyspace() + "." + FEED_KEYSPACE;
-        //initIndexes();
+       // initIndexes(mongoTemplate);
     }
 
-    private void initIndexes() {
+    public static void initTextIndex(MongoTemplate template) {
         TextIndexDefinition textIndex = new TextIndexDefinition.TextIndexDefinitionBuilder()
                 .onField("title", 2F)
                 .build();
-        mongoTemplate.indexOps(Post.class)
+        template.indexOps(Post.class)
                 .ensureIndex(textIndex);
     }
 
